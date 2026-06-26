@@ -1,0 +1,126 @@
+LOCKWALL — END USER LICENSE AGREEMENT (EULA)
+Version 1.0 — 2026
+
+Copyright (c) 2026 SERHII SMOKTII ("the Author"). All rights reserved.
+
+IMPORTANT: Read this Agreement carefully before installing, copying, downloading, or using the software "LockWall" ("the Software"). By installing, copying, downloading, or using the Software, you ("the User") agree to be bound by this Agreement. If you do not agree, do not install, copy, download, or use the Software.
+
+This Software is PROPRIETARY FREEWARE. It is provided free of charge but is NOT open source. The source code is not published or licensed for distribution, modification, or derivative works. The rights granted below are limited to use of the compiled Software in its original form.
+
+1. GRANT OF LICENSE
+
+The Author grants the User a free, non-exclusive, non-transferable, worldwide license to install and use the Software, in its original compiled form, on any number of machines owned, operated, or administered by the User, for personal or internal commercial purposes.
+
+This license is granted only for use of the Software as provided by the Author and does not transfer ownership of the Software or any intellectual property rights.
+
+2. PERMITTED USE
+
+The User may:
+
+(a) install and use the Software free of charge;
+
+(b) use the Software for personal, educational, internal business, or internal administrative purposes;
+
+(c) copy the Software internally within the User's own organization for deployment, backup, or administrative purposes;
+
+(d) share links to the official Software website, official GitHub repository, or official release page.
+
+3. REDISTRIBUTION
+
+Public redistribution of the Software installer, executable files, packages, or archives is not permitted without prior written permission from the Author.
+
+The User may not upload, mirror, host, bundle, repackage, or distribute copies of the Software through third-party websites, software catalogs, file-sharing services, package repositories, or other public distribution channels unless expressly authorized in writing by the Author.
+
+Any authorized redistribution must include the Software only in its original, unmodified form, together with this Agreement and all copyright, trademark, and branding notices intact.
+
+4. RESTRICTIONS
+
+The User shall NOT:
+
+(a) modify, adapt, translate, patch, alter, or create derivative works of the Software;
+
+(b) decompile, disassemble, reverse-engineer, unpack, reconstruct, or attempt to derive the source code, algorithms, internal structure, or implementation details of the Software, except to the limited extent such restriction is expressly prohibited by applicable law;
+
+(c) sell, rent, lease, sublicense, resell, commercially distribute, host, bundle, repackage, or offer the Software as part of any paid product, paid service, managed service, hosting service, security service, or commercial package without prior written permission from the Author;
+
+(d) remove, obscure, or alter any copyright notice, trademark notice, logo, branding, version information, author attribution, or "LockWall" identification;
+
+(e) use the Software name, product name, logo, or branding to create, promote, or distribute a competing or derivative product;
+
+(f) use the Software for any unlawful purpose or in violation of applicable laws, regulations, or third-party rights.
+
+5. OWNERSHIP
+
+The Software is licensed, not sold. The Author retains all right, title, and interest in and to the Software, including all copyrights, trademarks, trade names, logos, product names, source code, design, documentation, and other intellectual property rights.
+
+The name "LockWall", and any related logos or product identifiers, is the property of the Author. No trademark license is granted except as necessary to identify the Software in permitted use.
+
+6. THIRD-PARTY COMPONENTS AND SERVICES
+
+The Software may include or interact with third-party components, libraries, services, APIs, or data providers. Such third-party materials remain subject to their own licenses, terms, and conditions.
+
+This Agreement does not modify or replace any third-party license terms. The User is responsible for complying with the terms of any third-party service or provider selected, configured, or used through the Software, including but not limited to GeoIP providers, notification services, email services, and external APIs.
+
+7. SECURITY SOFTWARE NOTICE
+
+The Software manages Windows Firewall rules, monitors Windows Event Logs, and may run with elevated privileges. Incorrect configuration may block legitimate access, including the User's own administrative access.
+
+The User is solely responsible for:
+
+(a) reviewing and testing the Software before relying on it in production;
+
+(b) configuring trusted IP addresses, VPN ranges, internal networks, and administrative systems in the whitelist;
+
+(c) verifying that firewall rules, block durations, thresholds, notifications, GeoIP settings, and other configuration options are appropriate for the User's environment;
+
+(d) maintaining backups and alternative access methods to protected systems.
+
+The Author strongly recommends testing the Software in monitor-only or controlled conditions before enabling automatic blocking in critical environments.
+
+8. DATA AND PRIVACY NOTICE
+
+The Software may process and store technical security data locally, including IP addresses, usernames found in authentication events, timestamps, login failure events, firewall actions, configuration values, audit records, and application logs.
+
+The User is responsible for determining whether the use of the Software complies with applicable privacy, employment, data protection, security, logging, monitoring, and record retention laws in the User's jurisdiction and organization.
+
+Unless explicitly configured otherwise by the User, the Software is intended to operate locally. External communication may occur when the User enables features such as GeoIP lookup, notifications, email delivery, webhooks, updates, or other integrations.
+
+9. NO SUPPORT OR MAINTENANCE OBLIGATION
+
+The Software is provided free of charge. The Author has no obligation to provide support, maintenance, updates, upgrades, bug fixes, security fixes, compatibility updates, documentation updates, continued availability, or continued development.
+
+The Author may modify, suspend, discontinue, rename, remove, or replace the Software, website, documentation, download links, or related services at any time.
+
+10. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, ACCURACY, RELIABILITY, SECURITY, COMPATIBILITY, OR AVAILABILITY.
+
+THE AUTHOR DOES NOT WARRANT THAT THE SOFTWARE WILL DETECT, BLOCK, PREVENT, MITIGATE, OR REPORT ANY PARTICULAR ATTACK, INCIDENT, VULNERABILITY, UNAUTHORIZED ACCESS, BRUTE-FORCE ATTEMPT, PASSWORD SPRAY ATTACK, OR OTHER SECURITY EVENT.
+
+THE AUTHOR DOES NOT WARRANT THAT THE SOFTWARE WILL OPERATE UNINTERRUPTED, ERROR-FREE, SECURELY, OR WITHOUT FALSE POSITIVES OR FALSE NEGATIVES.
+
+11. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES WHATSOEVER, INCLUDING BUT NOT LIMITED TO LOSS OF DATA, LOSS OF PROFITS, LOSS OF BUSINESS, BUSINESS INTERRUPTION, SYSTEM OUTAGE, UNAUTHORIZED ACCESS, SECURITY INCIDENTS, FAILURE TO DETECT OR BLOCK ATTACKS, FALSE POSITIVES, FALSE NEGATIVES, LOSS OF LEGITIMATE ACCESS CAUSED BY IP BLOCKING, CONFIGURATION ERRORS, FIREWALL ERRORS, OR USE OF THIRD-PARTY SERVICES.
+
+THE USER ASSUMES THE ENTIRE RISK ARISING OUT OF USE, CONFIGURATION, DEPLOYMENT, OPERATION, AND RELIANCE ON THE SOFTWARE.
+
+12. TERMINATION
+
+This license terminates automatically if the User breaches any term of this Agreement.
+
+Upon termination, the User must cease all use of the Software and destroy all copies in the User's possession or control.
+
+Sections relating to ownership, restrictions, third-party components, no warranty, limitation of liability, termination, and governing law shall survive termination.
+
+13. GOVERNING LAW
+
+This Agreement is governed by the laws of Ukraine, without regard to conflict-of-law provisions.
+
+Any disputes arising out of or relating to this Agreement shall be resolved by the competent courts of Ukraine, unless applicable mandatory law provides otherwise.
+
+14. CONTACT
+
+Contact: support@lockwall.app
+Project: https://github.com/SMSerg2000/LockWall
+Website: https://lockwall.app
