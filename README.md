@@ -6,7 +6,7 @@
 
 *Lock down your Windows server like a real fortress.*
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B%20%7C%20Server%202016%2B-lightgrey.svg)](https://www.microsoft.com/windows-server)
 [![License](https://img.shields.io/badge/license-Freeware-brightgreen.svg)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/total.svg)](https://github.com/SMSerg2000/LockWall/releases)
@@ -26,19 +26,20 @@
 - 🖥️ **RDP** (Remote Desktop Protocol) — Event ID 4625 in the Security Log
 - 📧 **OWA** (Outlook Web Access) — IIS-hosted authentication via w3wp.exe
 - 🗄️ **SQL Server** — Event ID 18456 in the Application Log
+- 🔑 **SSH** (Windows OpenSSH Server) — Event ID 4 in the OpenSSH/Operational log
 
 ### Why LockWall?
 
 RDP brute-force is one of the most common attacks on internet-facing Windows servers. A public-facing machine can receive thousands of automated login attempts a day. LockWall blocks attackers **before** they crack passwords — automatically, with progressive escalation, and with notifications.
 
-**Free forever** — all three protocols, every feature, no license key, no seat limits.
+**Free forever** — all four protocols, every feature, no license key, no seat limits.
 
 ---
 
 ## ✨ Features
 
 ### Detection
-- 🔍 **RDP / OWA / SQL** brute-force monitoring — three protocols, one service
+- 🔍 **RDP / OWA / SQL / SSH** brute-force monitoring — four protocols, one service
 - 🎯 **Password Spray Detection** — blocks IPs trying multiple usernames
 - 📈 **Progressive Blocking** — escalating duration for repeat offenders (1h → 24h → 7d → permanent)
 - ⚙️ **Per-source Policies** — separate thresholds for RDP, OWA, SQL
@@ -70,7 +71,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 
 ## 🚀 Quick Start
 
-1. **Download** [`LockWall-Setup-x64.msi`](https://github.com/SMSerg2000/LockWall/releases/latest) (~13.5 MB)
+1. **Download** [`LockWall-Setup-x64.msi`](https://github.com/SMSerg2000/LockWall/releases/latest) (~14.4 MB)
 2. **Run the installer** (accept the license) — it installs to `C:\LockWall` and registers + starts the Windows service automatically
 3. **Open the web UI**: http://127.0.0.1:8880/
 4. **Login**: `admin` / `lockwall` (you'll be forced to change the password)
@@ -104,6 +105,7 @@ lockwall.exe status       # Check status
 lockwall.exe stop         # Stop
 lockwall.exe start        # Start
 lockwall.exe restart      # Restart
+lockwall.exe test-notify  # Send a test Telegram/Email notification
 
 # View active firewall rules
 netsh advfirewall firewall show rule name=all | findstr LOCKWALL_BLOCK
@@ -133,6 +135,7 @@ spray_detection:
 
 owa_protection:  { enabled: false }   # Enable on OWA servers
 sql_protection:  { enabled: false }   # Enable on SQL Server hosts
+ssh_protection:  { enabled: false }   # Enable on hosts with OpenSSH Server
 
 web:
   host: 127.0.0.1                # Don't expose externally without HTTPS!

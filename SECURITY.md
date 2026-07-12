@@ -70,7 +70,8 @@ Security updates are provided for the latest version:
 
 | Version | Supported |
 |---------|-----------|
-| 2.0.x | ✅ Supported |
+| 2.1.x | ✅ Supported |
+| 2.0.x | ❌ Not supported — upgrade for free |
 | 1.x / pre-public builds | ❌ Not supported |
 
 ---

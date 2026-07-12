@@ -1,7 +1,7 @@
 # LockWall — User Guide
 
-> **Version:** 2.0.0
-> **Date:** 2026-06-28
+> **Version:** 2.1.0
+> **Date:** 2026-07-12
 
 ---
 
@@ -40,6 +40,7 @@
 - 🖥️ **RDP** (Remote Desktop Protocol) — Event ID 4625 in Security Log
 - 📧 **OWA** (Outlook Web Access) — Event ID 4625 from IIS worker (w3wp.exe)
 - 🗄️ **SQL Server** — Event ID 18456 in Application Log
+- 🔑 **SSH** (Windows OpenSSH Server) — Event ID 4 in the OpenSSH/Operational log
 
 ### Why You Need It
 
@@ -205,6 +206,7 @@ Sections:
 - **Web Interface** — host and port
 - **OWA Protection** — toggle (requires restart)
 - **SQL Server Protection** — toggle (requires restart)
+- **SSH Protection** — toggle (requires restart; needs Windows OpenSSH Server)
 - **GeoIP** — online/local mode
 - **Notifications** — Telegram, Email
 - **Logging** — log level
@@ -259,6 +261,7 @@ They are for advanced or manual control. All commands run as Administrator:
 | `lockwall.exe start` | Start service |
 | `lockwall.exe stop` | Stop service |
 | `lockwall.exe restart` | Restart service |
+| `lockwall.exe test-notify` | Send a test Telegram/Email notification |
 | `lockwall.exe run --web` | Console mode (debugging) |
 | `lockwall.exe run --dry-run --web` | Test without real blocking |
 
@@ -373,7 +376,7 @@ auth:
   session_timeout_minutes: 30
 ```
 
-#### `owa_protection` / `sql_protection`
+#### `owa_protection` / `sql_protection` / `ssh_protection`
 
 ```yaml
 owa_protection:
@@ -381,7 +384,14 @@ owa_protection:
 
 sql_protection:
   enabled: false   # Enable only on servers with SQL Server
+
+ssh_protection:
+  enabled: false   # Enable only on servers with Windows OpenSSH Server
 ```
+
+> **SSH note:** attempts are read from the **OpenSSH/Operational** event log
+> (`Failed password for … from IP port …`). The Security log (Event 4625) is
+> not used for SSH — sshd does not report the client IP there.
 
 ⚠️ Changes to these require **service restart**.
 
@@ -803,7 +813,7 @@ employment and logging laws that apply to your organization and jurisdiction.
 **A:** Windows Firewall limit ~10000 IPs per rule. With 6 rules → theoretically 60000 IPs. In practice rarely more than a few hundred.
 
 ### Q: Can LockWall protect HTTP/FTP?
-**A:** Not in this version. Only RDP, OWA, and SQL Server. Future versions may extend support.
+**A:** Not in this version. Only RDP, OWA, SQL Server, and SSH. Future versions may extend support.
 
 ### Q: What if an IP keeps attacking?
 **A:** Use Progressive Blocking (4th block = permanent), or manually **Make Permanent**. Consider blocking the entire subnet via CIDR.
