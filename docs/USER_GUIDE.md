@@ -579,7 +579,7 @@ netsh advfirewall firewall show rule name=LOCKWALL_BLOCK_7D
 |--------|-------|----------|
 | Blocked IPs | `Blocked IPs` → **Export CSV** | IP, country, attempts, time |
 | Audit Log | `Audit` → **Export CSV** | User actions |
-| Login Attempts | API: `/api/export/attempts` | All login attempts |
+| Login Attempts | API: `/api/export/attempts` (Admin token) | All login attempts |
 
 CSV uses **UTF-8 with BOM** for Excel compatibility.
 
@@ -599,15 +599,72 @@ LockWall provides REST API for integrations (SIEM, scripts, monitoring).
 
 ### Use Token
 
-```bash
-# Bearer header
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-     http://127.0.0.1:8880/api/health
+Pass the token in **either** header — `Authorization: Bearer …` or `X-API-Key: …`.
 
-# X-API-Key header
-curl -H "X-API-Key: YOUR_TOKEN" \
-     http://127.0.0.1:8880/api/health
+**PowerShell** (the usual choice on Windows Server):
+
+```powershell
+$h = @{ Authorization = "Bearer YOUR_TOKEN" }
+
+# System diagnostics
+Invoke-RestMethod -Uri "http://127.0.0.1:8880/api/health" -Headers $h
+
+# Top attacker countries for the last 24 hours
+Invoke-RestMethod -Uri "http://127.0.0.1:8880/api/stats/countries?hours=24" -Headers $h |
+    Select-Object -ExpandProperty countries
+
+# CSV export -> file (admin token required)
+Invoke-WebRequest -Uri "http://127.0.0.1:8880/api/export/blocks" -Headers $h -OutFile blocks.csv
 ```
+
+**curl:**
+
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" http://127.0.0.1:8880/api/health
+curl -H "X-API-Key: YOUR_TOKEN"            http://127.0.0.1:8880/api/stats
+```
+
+### Available Endpoints
+
+A **Viewer** token can read; an **Admin** token can also export data and perform
+administrative actions.
+
+| Method | Endpoint | Role | Returns |
+|--------|----------|------|---------|
+| GET | `/api/health` | Viewer | Diagnostics: database, firewall, disk, service, uptime |
+| GET | `/api/stats` | Viewer | Dashboard counters (blocks, attempts) |
+| GET | `/api/activity` | Viewer | Recent events |
+| GET | `/api/logs` | Viewer | Application log — `limit`, `level`, `search` |
+| GET | `/api/stats/hourly` | Viewer | Attempts per hour — `hours` (default 24) |
+| GET | `/api/stats/daily` | Viewer | Activity per day — `days` (default 7) |
+| GET | `/api/stats/countries` | Viewer | Top attacker countries — `hours` (default 24) |
+| GET | `/api/firewall/status` | Viewer | Windows Firewall state + pre-flight report |
+| GET | `/api/audit` | **Admin** | Audit log (JSON) |
+| GET | `/api/export/blocks` | **Admin** | CSV: blocked IPs |
+| GET | `/api/export/audit` | **Admin** | CSV: audit log |
+| GET | `/api/export/attempts` | **Admin** | CSV: login attempts |
+| POST | `/api/firewall/enable` | **Admin** | Enable Windows Firewall (`confirm=yes`) |
+| POST | `/api/firewall/confirm` | **Admin** | Confirm access after enabling |
+| POST | `/api/notifications/test` | **Admin** | Send a test notification |
+| POST | `/api/geoip/test` | **Admin** | Test a GeoIP lookup |
+| POST | `/api/tokens/create` | **Admin** | Create an API token |
+| POST | `/api/tokens/<id>/revoke` | **Admin** | Revoke an API token |
+
+### Errors
+
+| Situation | Response |
+|-----------|----------|
+| Token missing, invalid, or revoked | `401` `{"error": "Invalid or expired API token"}` |
+| Viewer token on an Admin endpoint | `403` `{"error": "Admin privileges required"}` |
+
+API requests always get JSON errors — they are never redirected to the login page.
+
+### Not available via API (yet)
+
+**Blocking and unblocking IPs cannot be automated through the API.** Those actions
+(`/blocks/add`, `/blocks/<ip>/unblock`, changing a block's duration) are browser
+form posts protected by a session and a CSRF token, not API endpoints. Script-driven
+blocking is planned together with the versioned `/api/v1` (see *API Status* below).
 
 ### Revoke
 
