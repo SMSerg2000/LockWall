@@ -1,6 +1,6 @@
 # LockWall — User Guide
 
-> **Version:** 2.3.0
+> **Version:** 2.4.1
 > **Date:** 2026-08-22
 
 ---
@@ -335,11 +335,21 @@ lockwall.exe start
 
 Download the new release from the **official** [GitHub Releases](https://github.com/SMSerg2000/LockWall/releases) (verify its SHA-256), then run the new **`LockWall-Setup-x64.msi`**. The installer stops the old service, replaces the program, and starts the new version automatically — **your `config.yaml` and `data\lockwall.db` are preserved**. No need to uninstall first.
 
+The update runs unattended: it asks nothing and needs no answers. Blocked IPs stay
+blocked throughout, because the firewall rules live in Windows itself rather than
+inside LockWall.
+
+To check which version a server is on without opening the web interface, look at
+the service description: **services.msc → LockWall → Properties**. It carries the
+running version number and is refreshed at every start.
+
 ### Uninstall
 
 Remove LockWall via **Settings → Apps** (or *Programs and Features*) → **LockWall** → **Uninstall**. This stops and removes the Windows service and deletes the program files.
 
-The firewall rules are left in place by default. To remove them too:
+The firewall rules are **kept** — deliberately. Removing them would unblock every
+attacker LockWall has ever caught, in one step, at the exact moment protection
+stops running. To remove them anyway:
 ```powershell
 netsh advfirewall firewall delete rule name=LOCKWALL_BLOCK_30M
 netsh advfirewall firewall delete rule name=LOCKWALL_BLOCK_1H
@@ -809,11 +819,24 @@ is shown there, along with a button to turn the firewall on safely. See
 
 ### The web interface returns "Internal Server Error"
 
-Fixed in 2.3.0. Older versions unpacked themselves into the Windows temporary
-folder, which Windows cleans up periodically — even while the service is running —
-taking the web interface's files with it. Protection kept working throughout;
-only the web interface was affected. Restarting the service was the workaround;
-updating to 2.3.0 removes the cause.
+Fixed. Versions before 2.4.0 unpacked themselves into a temporary folder on every
+start, and Windows cleans such folders up periodically — even while the service is
+running — taking the web interface's files with it. Protection kept working
+throughout; only the web interface was affected, and restarting the service was
+the workaround.
+
+Since 2.4.0 LockWall does not unpack anything: the program files sit next to
+`lockwall.exe` and are loaded directly, so there is nothing left to clean up
+behind its back.
+
+### The update seems stuck with the progress bar full
+
+Only when updating **from version 2.3.0**, and only once. That version hid its
+console window but could still stop to ask what to do with the firewall rules —
+a question nobody can see or answer, so the installer waits forever.
+
+Open Task Manager and end the `lockwall.exe` process; the installation continues
+on its own and nothing is lost. Updates from 2.4.0 onwards never ask anything.
 
 ### No notifications
 - **Telegram**: Bot Token correct? Chat ID has minus sign for groups?
@@ -857,6 +880,26 @@ Use this **only** if you have lost access to **all** admin accounts.
 1. **Change default password** — don't keep `admin/lockwall`
 2. **Whitelist your network** — avoid lockout
 3. **Don't expose port 8880** — keep `host: 127.0.0.1`
+
+### 🔐 What LockWall protects on its own
+
+You do not need to configure any of this — it is applied at install time and
+re-checked every time the service starts. It is described here so you know what
+the permissions on `C:\LockWall` should look like, and are not surprised by them.
+
+| Folder | Who has access | Why |
+|--------|----------------|-----|
+| `C:\LockWall` | SYSTEM and administrators can write; everyone else can only read | Otherwise any user of the machine could replace `lockwall.exe` or one of its libraries, and the service — which runs as SYSTEM — would execute their code at the next start |
+| `config\`, `data\` | SYSTEM and administrators only | They hold the Telegram bot token, the SMTP password, the key used to sign web sessions, and the password and API-token hashes |
+| `logs\` | readable by everyone | Deliberate: diagnostics should not require administrator rights, and there are no secrets in the logs |
+
+Permissions that an administrator granted to specific accounts are left alone —
+LockWall removes access for broad groups (*Users*, *Authenticated Users*,
+*Everyone*), not for people you trusted on purpose.
+
+> Anyone who can read `data\.secret_key` can forge a session cookie and enter the
+> web interface as an administrator **without knowing any password**. If you copy
+> the folder elsewhere — for a backup, to another server — keep it just as closed.
 
 ### 💡 Recommended
 
