@@ -1,7 +1,7 @@
 # LockWall — User Guide
 
-> **Version:** 2.1.0
-> **Date:** 2026-07-12
+> **Version:** 2.3.0
+> **Date:** 2026-08-22
 
 ---
 
@@ -216,6 +216,7 @@ After save, **Save & Restart Service** restarts the service.
 ### Health (`/health`)
 
 System diagnostics:
+- ✅ **Windows Firewall state** — see below
 - ✅ Database accessible
 - ✅ Firewall sync (DB ↔ netsh)
 - ✅ Notifications (Telegram + Email)
@@ -223,6 +224,39 @@ System diagnostics:
 - ✅ Service status
 - ✅ Uptime
 - ✅ Version
+
+#### If Windows Firewall is switched off
+
+LockWall blocks attackers by writing Windows Firewall rules. **If the firewall is
+disabled, those rules exist but are never enforced** — attacks are detected and
+logged, notifications arrive, the dashboard fills up, and the traffic keeps
+flowing. The server looks protected while it is not.
+
+LockWall now says so out loud: in the log at service start, in a red banner on
+**every page** of the web interface, on this page, and on the installer's final
+screen.
+
+**Turning it on from the Health page** (button *Enable Windows Firewall*, or
+`lockwall.exe enable-firewall` on a server without a browser):
+
+1. **Pre-flight report.** You see which ports are currently listening. This
+   matters: with the firewall on, inbound traffic is blocked by default, so
+   anything without an allow rule — SMTP, SQL, SMB, a custom service — becomes
+   unreachable. Read this list before you continue.
+2. **Your RDP is protected first.** LockWall reads the **real** RDP port from the
+   registry (not just 3389) and creates an allow rule for TCP and UDP, inbound
+   and outbound, *before* switching the firewall on.
+3. **Safety net against locking yourself out.** After enabling, the firewall
+   switches back off automatically within 10 minutes unless you confirm that
+   access still works — the *Confirm* button, or `lockwall.exe confirm-firewall`.
+   Lost your session? Do nothing: the server reverts on its own. The window is
+   configurable via `firewall.revert_timeout_minutes`.
+
+Blocked attackers stay blocked throughout: Windows evaluates block rules before
+allow rules, so the RDP allow rule does not weaken protection.
+
+> ⚠️ LockWall **never** enables the firewall on its own. It changes the
+> reachability of every service on the machine, so it is always your decision.
 
 ### Audit (`/audit`)
 
@@ -262,6 +296,9 @@ They are for advanced or manual control. All commands run as Administrator:
 | `lockwall.exe stop` | Stop service |
 | `lockwall.exe restart` | Restart service |
 | `lockwall.exe test-notify` | Send a test Telegram/Email notification |
+| `lockwall.exe firewall-status` | Show the Windows Firewall state — are blocks actually enforced? |
+| `lockwall.exe enable-firewall` | Turn Windows Firewall on safely (keeps RDP reachable) |
+| `lockwall.exe confirm-firewall` | Confirm access still works, cancelling the automatic revert |
 | `lockwall.exe run --web` | Console mode (debugging) |
 | `lockwall.exe run --dry-run --web` | Test without real blocking |
 
@@ -375,6 +412,20 @@ auth:
   enabled: true
   session_timeout_minutes: 30
 ```
+
+#### `firewall` — Windows Firewall awareness
+
+```yaml
+firewall:
+  check_on_start: true        # warn at startup if the firewall is disabled
+  revert_timeout_minutes: 10  # auto-revert window after enabling (0 = off)
+```
+
+`check_on_start` controls the warnings described under
+[Health](#health-health); `revert_timeout_minutes` is how long you have to
+confirm that access still works after switching the firewall on before LockWall
+switches it back off. Set it to `0` only if you have out-of-band access to the
+server (console, IPMI, hypervisor) — it removes your safety net.
 
 #### `owa_protection` / `sql_protection` / `ssh_protection`
 
@@ -746,6 +797,24 @@ logging:
 3. Check `max_attempts` and `time_window_minutes`
 4. Check logs for errors
 
+### Attacks are detected, but the attackers keep coming
+
+The dashboard fills up, notifications arrive, IPs appear as blocked — and yet the
+same addresses keep trying. Almost always this means **Windows Firewall is
+switched off**: LockWall's rules exist but Windows never enforces them.
+
+Check with `lockwall.exe firewall-status` or open the **Health** page — the state
+is shown there, along with a button to turn the firewall on safely. See
+[If Windows Firewall is switched off](#if-windows-firewall-is-switched-off).
+
+### The web interface returns "Internal Server Error"
+
+Fixed in 2.3.0. Older versions unpacked themselves into the Windows temporary
+folder, which Windows cleans up periodically — even while the service is running —
+taking the web interface's files with it. Protection kept working throughout;
+only the web interface was affected. Restarting the service was the workaround;
+updating to 2.3.0 removes the cause.
+
 ### No notifications
 - **Telegram**: Bot Token correct? Chat ID has minus sign for groups?
 - **Email**: SMTP correct? Gmail uses App Password!
@@ -815,6 +884,8 @@ Before enabling LockWall on a production server:
 - [ ] Changed the **default admin password**
 - [ ] Added **admin, VPN and internal networks** to the whitelist
 - [ ] Confirmed **Windows audit policy** is enabled (LockWall enables it automatically)
+- [ ] Confirmed **Windows Firewall is ON** — without it LockWall detects attacks but
+      blocks nothing (`lockwall.exe firewall-status`, or the Health page)
 - [ ] Web UI is bound to **`127.0.0.1`** (or placed behind an HTTPS reverse proxy)
 - [ ] Tested **Telegram or Email** notifications (if you use them)
 - [ ] Selected a **GeoIP provider** or left GeoIP **Off**
