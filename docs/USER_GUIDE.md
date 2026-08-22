@@ -1,6 +1,6 @@
 # LockWall — User Guide
 
-> **Version:** 2.4.1
+> **Version:** 2.4.4
 > **Date:** 2026-08-22
 
 ---
@@ -828,6 +828,17 @@ the workaround.
 Since 2.4.0 LockWall does not unpack anything: the program files sit next to
 `lockwall.exe` and are loaded directly, so there is nothing left to clean up
 behind its back.
+
+### The installer says files are in use
+
+Expected, and safe to accept. The running LockWall service holds its own program
+files open, so Windows Installer offers to close it. Choose **"Close the
+applications and attempt to restart them"** — the installer stops the service,
+replaces the files and starts it again. Blocked IPs stay blocked throughout: the
+rules live in Windows Firewall, not inside LockWall.
+
+The other option ("Do not close applications") also works but requires a reboot to
+finish, and LockWall will not run until then.
 
 ### The update seems stuck with the progress bar full
 
