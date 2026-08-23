@@ -7,6 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.4.5] — 2026-08-22
+
+🔥 **Windows Firewall awareness, hardened permissions, and a faster service.**
+
+### Added
+- **LockWall now tells you when Windows Firewall is switched off.** Until now it
+  would detect attacks and create blocking rules that Windows silently never
+  enforced — the dashboard filled up, notifications arrived, and the traffic kept
+  flowing. The worst kind of broken protection is the kind that looks like it is
+  working. The warning appears at service start (log), in a banner on **every**
+  page of the web interface, on the new **Health** page, and on the installer's
+  final screen — many people install through the MSI and never see a console.
+- **One-click "Enable Windows Firewall"** on the Health page, or
+  `lockwall.exe enable-firewall` on a server without a browser. Your RDP is
+  protected first: LockWall reads the **real** RDP port from the registry (not
+  just 3389) and creates an allow rule for TCP **and** UDP, inbound **and**
+  outbound, *before* switching the firewall on. You also get a pre-flight list of
+  everything currently listening, so you can see what would become unreachable.
+- **Safety net against locking yourself out** — unless you confirm that access
+  still works, the firewall switches back off within 10 minutes. Lost your
+  session? Do nothing: the server reverts on its own. Configurable via
+  `firewall.revert_timeout_minutes`. LockWall never enables the firewall on its
+  own — that changes what every service on the machine can reach, so it stays
+  your decision. Blocked attackers stay blocked throughout: Windows evaluates
+  block rules before allow rules.
+- **New commands for headless servers:** `lockwall.exe firewall-status` /
+  `enable-firewall` / `confirm-firewall`.
+- **The service description now carries the running version**
+  (`services.msc → LockWall → Properties`), so you can tell which build a server
+  is on without opening the web interface. Refreshed at every start, even if you
+  updated by replacing files by hand.
+
+### Security
+- **The configuration and data folders are now restricted to SYSTEM and
+  administrators.** They used to inherit permissions from the drive root that let
+  **any** local user read `config.yaml` — the Telegram bot token, the SMTP
+  password, and the key used to sign web sessions, which is enough to forge a
+  cookie and enter the web interface as an administrator without a password.
+- **The installation folder is now protected against modification.** The root of
+  the system drive grants every authenticated user Modify permissions on
+  everything created inside it, so any user of the machine could replace
+  `lockwall.exe` and have the LockWall service run their code as SYSTEM at the
+  next start. Write access is now limited to SYSTEM and administrators; reading
+  stays open so logs remain available for diagnostics without administrator
+  rights.
+- Permissions an administrator granted to **specific accounts** are left
+  untouched — the lockdown removes access for broad groups, not for people you
+  trusted on purpose. Existing installations are corrected automatically on
+  update or service start.
+
+### Changed
+- **LockWall no longer unpacks itself on every start.** It used to be a single
+  self-extracting executable writing ~17 MB to a temporary folder each time it
+  ran; the program files now sit next to the executable and load directly. The
+  service starts noticeably faster and the spurious *"did not respond in a timely
+  fashion"* warning (Event 7039) is gone.
+- **Updates run unattended and ask nothing.** Blocked IPs stay blocked
+  throughout, because the rules live in Windows Firewall rather than inside
+  LockWall.
+
+### Fixed
+- **The web interface could start returning "Internal Server Error"** after the
+  service had been running for a while. Windows cleans up temporary folders
+  periodically — even while a service is running — and took the web interface's
+  files with it. Protection kept working throughout; only the web interface was
+  affected. With the unpacking gone, so is the cause.
+- **The Health page reported the firewall check as "ok" while the firewall was
+  off** — it only compared rule counts, which exist regardless of whether Windows
+  enforces them.
+- **The installer could freeze indefinitely with the progress bar full.** Windows
+  consoles pause any program writing to them while text is being selected, so a
+  single stray mouse click was enough — trivially easy over RDP. This also
+  protects console runs, where the same click would have frozen the protection
+  engine.
+
+### Documentation
+- The **API section** now documents what to do with a token, not just how to
+  create one: every endpoint with its required role, error codes, and PowerShell
+  examples rather than curl only. Note that blocking and unblocking IPs is not
+  yet available through the API — that arrives with the versioned `/api/v1`.
+
+---
+
 ## [2.1.0] — 2026-07-12
 
 🔑 **SSH protection & bulletproof startup.**
