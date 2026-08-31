@@ -1,7 +1,7 @@
 # LockWall — User Guide
 
-> **Version:** 2.4.5
-> **Date:** 2026-08-22
+> **Version:** 2.4.6
+> **Date:** 2026-09-01
 
 ---
 
