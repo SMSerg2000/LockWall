@@ -1,6 +1,6 @@
 # LockWall — User Guide
 
-> **Version:** 2.5.0
+> **Version:** 2.6.2
 > **Date:** 2026-09-01
 
 ---
@@ -236,6 +236,14 @@ LockWall now says so out loud: in the log at service start, in a red banner on
 **every page** of the web interface, on this page, and on the installer's final
 screen.
 
+Since 2.5.1 it also keeps watching **while it runs**: the state is re-read every
+five minutes. If someone switches the firewall off, an ERROR goes to the log and
+an alert to Telegram/Email (if configured), with a reminder every hour while it
+stays off and a message when it is back on. The alert points you to the Windows
+Firewall event log (*Applications and Services → Microsoft → Windows → Windows
+Firewall With Advanced Security → Firewall*, events 2003/2082), which names the
+account that changed the setting. The startup warning goes to Telegram/Email too.
+
 **Turning it on from the Health page** (button *Enable Windows Firewall*, or
 `lockwall.exe enable-firewall` on a server without a browser):
 
@@ -257,6 +265,48 @@ allow rules, so the RDP allow rule does not weaken protection.
 
 > ⚠️ LockWall **never** enables the firewall on its own. It changes the
 > reachability of every service on the machine, so it is always your decision.
+
+### Updates (About page, Settings → Updates)
+
+LockWall can tell you when a new release is out and install it for you. **Both are
+off by default**: the site promises no telemetry and no phone-home, so the first
+outbound request is your decision.
+
+**What checking does.** Every 10 minutes the service fetches two small files from
+the LockWall release page on GitHub — the release manifest and its signature — and
+compares the version with the one installed. Nothing about your server is sent;
+the request carries the LockWall version in its `User-Agent` and nothing else, and
+GitHub sees your IP address as with any download. A banner on every page and the
+About page show what was found.
+
+**What installing does.** The signed installer is downloaded and verified, then
+LockWall waits for a quiet moment — two minutes without new blocks, at most half an
+hour — copies itself aside, and a one-off scheduled task runs the installer
+silently. The service restarts for about a minute; **blocked IPs stay blocked**
+throughout, because the rules live in Windows Firewall. Then LockWall checks that
+the new version is actually running. If it is not, the previous files are put back
+and the service is restarted on the old version. The outcome goes to the log
+(`logs\update.log`), the About page and Telegram/Email.
+
+**Why you can trust what arrives.** Every release manifest is signed with a key
+whose public half is built into LockWall. The signature is verified before the
+manifest is even parsed; the installer must match the size and SHA-256 from the
+signed manifest; HTTPS is enforced through redirects; an older version is never
+installed. A hijacked download location, a tampered file or a manifest signed with
+somebody else's key all end the same way: nothing is installed.
+
+**Waves.** Releases reach the `beta` channel first (pick two or three servers for
+it; beta builds live in a separate pre-release and never appear as the latest
+public download), then a growing share of `stable` servers. Which servers are in a wave is
+computed locally from each server's own random identifier; no server names travel
+anywhere. *Install now* on the About page skips the wait for your turn.
+
+Commands for servers without a browser: `lockwall.exe check-update` looks and
+installs nothing; `lockwall.exe update` installs now.
+
+> ℹ️ Automatic updates can only update a version that already has them: 2.6.0 has
+> to be installed by hand once. After a rollback Windows Installer may still list
+> the new version in *Programs and Features*; the next update straightens it out.
 
 ### Audit (`/audit`)
 
@@ -299,6 +349,8 @@ They are for advanced or manual control. All commands run as Administrator:
 | `lockwall.exe firewall-status` | Show the Windows Firewall state — are blocks actually enforced? |
 | `lockwall.exe enable-firewall` | Turn Windows Firewall on safely (keeps RDP reachable) |
 | `lockwall.exe confirm-firewall` | Confirm access still works, cancelling the automatic revert |
+| `lockwall.exe check-update` | Check whether a newer release is available (installs nothing) |
+| `lockwall.exe update [-y]` | Download, verify and install the latest release now |
 | `lockwall.exe run --web` | Console mode (debugging) |
 | `lockwall.exe run --dry-run --web` | Test without real blocking |
 
@@ -427,15 +479,30 @@ auth:
 
 ```yaml
 firewall:
-  check_on_start: true        # warn at startup if the firewall is disabled
+  check_on_start: true        # warn at startup and watch every 5 min while running
   revert_timeout_minutes: 10  # auto-revert window after enabling (0 = off)
 ```
 
-`check_on_start` controls the warnings described under
-[Health](#health-health); `revert_timeout_minutes` is how long you have to
+`check_on_start` controls the warnings and alerts described under
+[Health](#health-health), both at startup and the periodic check while running; `revert_timeout_minutes` is how long you have to
 confirm that access still works after switching the firewall on before LockWall
 switches it back off. Set it to `0` only if you have out-of-band access to the
 server (console, IPMI, hypervisor) — it removes your safety net.
+
+#### `update` — automatic updates
+
+```yaml
+update:
+  check_enabled: false        # look for new releases (two small HTTPS requests / 10 min)
+  auto_install: false         # install them without asking (needs check_enabled)
+  channel: stable             # stable | beta — beta servers get releases first
+  manifest_url: ""            # empty = LockWall releases on GitHub; set for an internal mirror
+  check_interval_minutes: 10
+```
+
+Everything is off by default. `manifest_url` lets a corporate network serve the
+same signed files from an internal HTTPS server — the signature is verified either
+way, so the mirror is only a transport. See [Updates](#updates-about-page-settings--updates).
 
 #### `owa_protection` / `sql_protection` / `ssh_protection`
 
@@ -816,6 +883,9 @@ switched off**: LockWall's rules exist but Windows never enforces them.
 Check with `lockwall.exe firewall-status` or open the **Health** page — the state
 is shown there, along with a button to turn the firewall on safely. See
 [If Windows Firewall is switched off](#if-windows-firewall-is-switched-off).
+
+Since 2.5.1 LockWall also tells you when this happens: an alert goes to
+Telegram/Email within five minutes of the firewall being switched off.
 
 ### The web interface returns "Internal Server Error"
 

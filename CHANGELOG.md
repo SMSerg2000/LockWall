@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.2] — 2026-09-20
+
+🔄 **Automatic updates — signed, verified, rolled back if needed.**
+
+### Added
+- **Automatic updates, off by default.** LockWall makes no outbound requests
+  unless you enable checking in *Settings → Updates*. When enabled, the service
+  fetches two small files from the release page every 10 minutes — the manifest
+  and its signature — and sends nothing about your server. With *Install updates
+  automatically* it installs new releases on its own; otherwise you get a banner,
+  an *Install now* button on the About page and `lockwall.exe update`.
+- **Every update is signed.** The manifest is verified with a key built into
+  LockWall *before* it is parsed; the installer must match the size and SHA-256
+  from the signed manifest; HTTPS is enforced through redirects; an older version
+  is never installed. A backup key is built in for rotation.
+- **Installs when quiet, verifies, rolls back.** Waits for two minutes without new
+  blocks (at most half an hour), copies the program aside, installs silently from a
+  one-off scheduled task, restarts the service and checks that the new version is
+  actually running — otherwise the previous files are put back. Outcome to the
+  log, the About page and Telegram/Email. Blocked IPs stay blocked throughout.
+- **Waves:** a `beta` channel gets releases first, then a growing share of `stable`
+  servers; membership is computed locally, no server names travel anywhere.
+- New commands `check-update` and `update`; Updates card in Settings; update panel
+  on the About page.
+- **Windows Firewall is watched while LockWall runs.** Switched off → ERROR in the
+  log and an alert to Telegram/Email within five minutes, hourly reminders, and a
+  message when it is back on. The startup warning reaches Telegram/Email too.
+
+### Changed
+- Blocked IPs are reconciled with Windows Firewall every few minutes, not only
+  when someone opens the Blocked IPs page.
+- Faster handling of large attacks: in-memory whitelist, per-address firewall
+  updates no longer hold up other addresses, dashboard statistics no longer pause
+  detection.
+- Python runtime updated to 3.14.
+
+### Upgrading
+Install the MSI over any 2.x version; settings, database and blocked IPs are
+kept. This is the last manual update if you enable automatic ones afterwards.
+
 ## [2.4.5] — 2026-08-22
 
 🔥 **Windows Firewall awareness, hardened permissions, and a faster service.**
