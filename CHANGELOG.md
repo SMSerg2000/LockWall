@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.4] — 2026-09-21
+
+### Fixed
+- **SSH scanners that present a username and drop the connection before sending
+  any password were invisible.** sshd records such a probe as `Invalid user X from
+  IP port N` followed by `Connection reset by invalid user … [preauth]` — and never
+  writes the *Failed password* line, the only line LockWall had counted since SSH
+  protection appeared in 2.1.0. A bot cycling through `root`, `admin` and `user1`
+  could knock all day without a single block. Unknown usernames now count as
+  attempts, as fail2ban treats them by default; wrong passwords sent for an unknown
+  user count as well. Connection close/reset lines are still ignored — they belong
+  to a probe that has already been counted. Reported by a LockWall user; thank you.
+
 ## [2.6.3] — 2026-09-21
 
 ### Fixed

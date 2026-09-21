@@ -1,7 +1,7 @@
 # LockWall — User Guide
 
-> **Version:** 2.6.2
-> **Date:** 2026-09-01
+> **Version:** 2.6.4
+> **Date:** 2026-09-21
 
 ---
 
@@ -517,8 +517,11 @@ ssh_protection:
   enabled: false   # Enable only on servers with Windows OpenSSH Server
 ```
 
-> **SSH note:** attempts are read from the **OpenSSH/Operational** event log
-> (`Failed password for … from IP port …`). The Security log (Event 4625) is
+> **SSH note:** attempts are read from the **OpenSSH/Operational** event log:
+> `Failed password for … from IP port …` and, since 2.6.4, `Invalid user … from IP
+> port …`. Scanners usually present a username and drop the connection before
+> sending any password, so sshd never writes a *Failed password* line for them —
+> without the second pattern they were invisible. The Security log (Event 4625) is
 > not used for SSH — sshd does not report the client IP there.
 
 ⚠️ Changes to these require **service restart**.
