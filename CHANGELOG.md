@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.6] — 2026-09-21
+
+### Fixed
+- **Commands other than the service itself now write to the log.** Only the
+  service and three commands did; everything else wrote to a logger with nowhere
+  to write. The costly one was the firewall safety net: when you enable Windows
+  Firewall from LockWall, a scheduled task turns it back off unless you confirm
+  your access still works — and that revert, running with nobody at the console,
+  left no trace at all. The same applied to `enable-firewall`, `confirm-firewall`,
+  `install`, `uninstall`, and to the startup message about certificate
+  verification, whose failure quietly explains why notifications later stop
+  arriving. If LockWall cannot write its log, it keeps running anyway.
+
+## [2.6.5] — 2026-09-21
+
+### Added
+- **The About page marks a server that is on the beta channel**, next to the
+  version. Beta servers receive releases before everyone else; until now that was
+  visible only in *Settings*. Releases keep one version number across channels:
+  what reaches stable is the same file, byte for byte, that was tried on beta.
+
 ## [2.6.4] — 2026-09-21
 
 ### Fixed

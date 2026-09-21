@@ -1,6 +1,6 @@
 # LockWall — User Guide
 
-> **Version:** 2.6.4
+> **Version:** 2.6.6
 > **Date:** 2026-09-21
 
 ---
@@ -299,7 +299,10 @@ somebody else's key all end the same way: nothing is installed.
 it; beta builds live in a separate pre-release and never appear as the latest
 public download), then a growing share of `stable` servers. Which servers are in a wave is
 computed locally from each server's own random identifier; no server names travel
-anywhere. *Install now* on the About page skips the wait for your turn.
+anywhere. *Install now* on the About page skips the wait for your turn. A server on the
+beta channel is marked as such on the About page, next to the version. Releases keep one
+version number across channels: what reaches stable is the same file, byte for byte, that
+was tried on beta.
 
 Commands for servers without a browser: `lockwall.exe check-update` looks and
 installs nothing; `lockwall.exe update` installs now.
