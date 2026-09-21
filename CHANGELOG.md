@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.7] — 2026-09-21
+
+### Added
+- **The About page says whether the installed version is a pre-release or the
+  stable one**, next to the version number. This is about the file on disk, not
+  about the update channel in Settings: a pre-release is simply a version newer
+  than the one currently in the stable channel. Once it is released to everybody
+  the label becomes *stable* by itself — nothing to reinstall, it is the same
+  file. If LockWall cannot tell what is in the stable channel (checks off, no
+  network, own mirror), no label is shown: saying "stable" when it might not be
+  true would be worse than saying nothing.
+
 ## [2.6.6] — 2026-09-21
 
 ### Fixed
