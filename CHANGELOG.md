@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.3] — 2026-09-21
+
+### Fixed
+- **The *Updates* switches in Settings now take effect immediately**, as the page
+  says. In 2.6.2 the running service kept its previous settings until it was
+  restarted: you could enable update checking, press *Save*, see the confirmation
+  — and the service still would not be checking. *Check now* on the About page
+  worked, which made it easy to miss. Coming from 2.6.2 with updates that never
+  seemed to start: restart the service once, or install this release by hand.
+- **No warning in `logs\update.log` when an update succeeds.** The installer
+  starts the service itself; LockWall then tried to start it again and logged the
+  resulting "already running" as a warning. The outcome was always correct.
+
+### Added
+- The service log states the update settings at startup — channel, how often it
+  checks, and whether installing is automatic. Handy for reading the state of many
+  servers from their logs instead of opening each web interface.
+
 ## [2.6.2] — 2026-09-20
 
 🔄 **Automatic updates — signed, verified, rolled back if needed.**
