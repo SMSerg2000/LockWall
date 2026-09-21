@@ -16,8 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the same publisher the installer carries. An executable with no identity is one
   of the things antivirus machine-learning models hold against a file, and the
   effect is measurable: 2.6.7 was flagged by seven engines on VirusTotal
-  including Microsoft Defender, this build by two, and Defender is not among
-  them. Not a substitute for a code-signing certificate, but if you were holding
+  including Microsoft Defender, this build by four — Defender, Elastic and
+  Skyhigh are gone. Not a substitute for a code-signing certificate, but if you were holding
   off because Defender complained, this is the build to take.
 
 ## [2.6.7] — 2026-09-21
