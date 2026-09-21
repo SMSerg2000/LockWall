@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.6.8] — 2026-09-21
+
+### Added
+- **`lockwall.exe` carries publisher, product, description and version in its
+  file properties.** Those fields were empty before: Windows showed an unnamed
+  executable. *Properties → Details* now shows `Serhii Smoktii` and `LockWall`,
+  the same publisher the installer carries. An executable with no identity is one
+  of the things antivirus machine-learning models hold against a file, and the
+  effect is measurable: 2.6.7 was flagged by seven engines on VirusTotal
+  including Microsoft Defender, this build by two, and Defender is not among
+  them. Not a substitute for a code-signing certificate, but if you were holding
+  off because Defender complained, this is the build to take.
+
 ## [2.6.7] — 2026-09-21
 
 ### Added
