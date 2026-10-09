@@ -1,6 +1,6 @@
 # LockWall — User Guide
 
-> **Version:** 2.6.8
+> **Version:** 2.7.2
 > **Date:** 2026-09-21
 
 ---
@@ -217,6 +217,9 @@ After save, **Save & Restart Service** restarts the service.
 
 System diagnostics:
 - ✅ **Windows Firewall state** — see below
+- ✅ **Audit policy** — failed logons are audited (event 4625)
+- ✅ **Security log** — Windows is still writing the log LockWall reads RDP/OWA
+  attacks from — see [If Windows stops writing the Security log](#if-windows-stops-writing-the-security-log)
 - ✅ Database accessible
 - ✅ Firewall sync (DB ↔ netsh)
 - ✅ Notifications (Telegram + Email)
@@ -266,6 +269,58 @@ allow rules, so the RDP allow rule does not weaken protection.
 > ⚠️ LockWall **never** enables the firewall on its own. It changes the
 > reachability of every service on the machine, so it is always your decision.
 
+#### If Windows stops writing the Security log
+
+LockWall sees RDP and OWA attacks in one place only: the Windows **Security**
+event log (event 4625, a failed logon). If Windows stops writing that log, LockWall
+is blind to those attacks — and nothing else looks wrong: the service is running,
+its log is clean, the dashboard stays green. SSH and SQL Server attempts come from
+other logs and are not affected.
+
+The usual cause is a log setting: **"Do not overwrite events (Clear logs
+manually)"**. When such a log reaches its maximum size, Windows writes one last
+event — 1104, *"The security log is now full"* — and then records nothing at all,
+not even failed logons. On one of our own servers this went unnoticed for almost
+six months.
+
+Since 2.7.0 LockWall checks this at start and every five minutes, the same way it
+watches the firewall:
+
+- **The log has stopped** (full, "Do not overwrite") or **has been silent for more
+  than a day** — an ERROR in the log, a red banner on every page, an alert to
+  Telegram/Email, a reminder every hour, and a message when Windows writes again.
+- **The log is set to "Do not overwrite" but still has room** — a yellow banner and
+  a single alert, so you can fix it before it fills up.
+- **Failed-logon auditing is switched off while LockWall runs** (by an
+  administrator or a Group Policy) — LockWall switches it back on if
+  `audit.auto_enable` is `true` (the default) and tells you; otherwise it raises the
+  alarm. If the "switched back on" message keeps coming, a Group Policy is turning
+  auditing off — fix it there.
+
+**Fixing it** — the *Fix the Security log* button in the *Windows Security log*
+section of this page, or `lockwall.exe fix-security-log` on a server without a
+browser:
+
+1. LockWall saves a copy of the current log to its `data` folder
+   (`security-log-<date>-<time>.evtx`) — the events in it may matter for an
+   investigation;
+2. switches the log to **"Overwrite events as needed"**; the maximum size stays as
+   it is;
+3. checks that the change stuck and that Windows writes new events again.
+
+If the mode is enforced by Group Policy, LockWall does not touch it and tells you
+where to change it (*Computer Configuration → Administrative Templates → Windows
+Components → Event Log Service → Security*). If the mode comes back by itself after
+a fix, a policy is setting it — look there.
+
+> ⚠️ LockWall **never** changes the log mode on its own: some organisations keep
+> "Do not overwrite" on purpose, for audit requirements. It tells you, and fixes it
+> when you ask.
+
+Check any server by hand: `lockwall.exe security-log-status` (as administrator), or
+`wevtutil gl Security` (look for `retention: false`) and the newest event in
+*Event Viewer → Windows Logs → Security*.
+
 ### Updates (About page, Settings → Updates)
 
 LockWall can tell you when a new release is out and install it for you. **Both are
@@ -293,7 +348,13 @@ whose public half is built into LockWall. The signature is verified before the
 manifest is even parsed; the installer must match the size and SHA-256 from the
 signed manifest; HTTPS is enforced through redirects; an older version is never
 installed. A hijacked download location, a tampered file or a manifest signed with
-somebody else's key all end the same way: nothing is installed.
+somebody else's key all end the same way: nothing is installed. Right before the
+installer runs — minutes or half an hour after the download — the file is checked
+against the signed manifest once more, and the folder the updater runs from is
+restricted to SYSTEM and administrators (2.7.1). A manifest whose signature does
+not verify, or an installer that does not match it, raises an alert in
+Telegram/Email, at most once a day, so a tampered file or a broken release upload
+is not just a line in a log nobody reads.
 
 **Waves.** Releases reach the `beta` channel first (pick two or three servers for
 it; beta builds live in a separate pre-release and never appear as the latest
@@ -357,6 +418,8 @@ They are for advanced or manual control. All commands run as Administrator:
 | `lockwall.exe firewall-status` | Show the Windows Firewall state — are blocks actually enforced? |
 | `lockwall.exe enable-firewall` | Turn Windows Firewall on safely (keeps RDP reachable) |
 | `lockwall.exe confirm-firewall` | Confirm access still works, cancelling the automatic revert |
+| `lockwall.exe security-log-status` | Is Windows writing the Security log? (exit code 0 = yes, 1 = LockWall is blind) |
+| `lockwall.exe fix-security-log [-y]` | Save a copy of the Security log and switch it to "Overwrite events as needed" |
 | `lockwall.exe check-update` | Check whether a newer release is available (installs nothing) |
 | `lockwall.exe update [-y]` | Download, verify and install the latest release now |
 | `lockwall.exe run --web` | Console mode (debugging) |
@@ -371,6 +434,12 @@ After installation, the service appears as:
 - **Name**: `LockWall`
 - **Display Name**: `LockWall - Windows Server Protection`
 - **Startup Type**: Automatic (Delayed Start)
+
+Windows starts the service a couple of minutes after boot, which keeps the boot light on
+modest servers. Since 2.7.2 nothing is lost in those minutes: on its first start after a
+reboot LockWall reads the logs back to the moment Windows started (never further back than
+the counting window), so failed logons made before the service was up are counted too. A
+restart of the service re-reads nothing, so no attempt is counted twice.
 
 ---
 
@@ -562,11 +631,23 @@ ssh_protection:
 
 **Settings** → **Notifications** → **Email**:
 - SMTP Server (e.g., `smtp.gmail.com`)
-- Port: `587`, Use TLS: ✅
+- Port: `587`, Use TLS: ✅ (STARTTLS). Port `465` means SMTPS — TLS from the first byte
 - Username/Password
 - From / To addresses
 
 ⚠️ For Gmail, use **App Passwords**, not main account password.
+
+Since 2.7.1 LockWall **verifies the mail server's certificate**, through the Windows
+certificate store, as it already did for Telegram. A server with a self-signed
+certificate fails with `CERTIFICATE_VERIFY_FAILED`: install its CA certificate on
+this machine, or — if you accept that anyone between this server and the mail
+server could read the SMTP password — switch verification off in `config.yaml`:
+
+```yaml
+notifications:
+  email:
+    insecure_ssl: true
+```
 
 ### Server Label
 
@@ -881,9 +962,12 @@ logging:
 
 ### No blocks happening
 1. Audit logon **must be enabled**
-2. Check whitelist
-3. Check `max_attempts` and `time_window_minutes`
-4. Check logs for errors
+2. Windows **must be writing the Security log** — `lockwall.exe security-log-status`
+   or the Health page; see
+   [If Windows stops writing the Security log](#if-windows-stops-writing-the-security-log)
+3. Check whitelist
+4. Check `max_attempts` and `time_window_minutes`
+5. Check logs for errors
 
 ### Attacks are detected, but the attackers keep coming
 
@@ -930,9 +1014,38 @@ a question nobody can see or answer, so the installer waits forever.
 Open Task Manager and end the `lockwall.exe` process; the installation continues
 on its own and nothing is lost. Updates from 2.4.0 onwards never ask anything.
 
+### Setup "did not finish" the moment it starts
+
+*"LockWall Setup did not finish"* (2.6.10 and later), or *"LockWall Setup Wizard ended
+prematurely because of an error"* (earlier versions) — and it appears within a second
+of pressing Install, on a server that has been running for weeks.
+
+This is not the package and not LockWall. In this state Windows Installer refuses
+some installations outright: its verbose log shows the engine returning 1603 right
+after `Grabbed execution mutex`, with no actions at all. It is not specific to
+LockWall — on the same server, part of a Microsoft SQL Server update failed with an
+identical log, while other patches went through a minute earlier. It
+has been seen on a Remote Desktop server with a month of uptime, twice, and each
+time a reboot fixed it. To confirm before rebooting, run the installer with a log
+and look at the last server-side lines:
+
+```
+msiexec /i LockWall-Setup-x64.msi /l*v %USERPROFILE%\Desktop\lockwall-install.log
+```
+
+If automatic updates are on, LockWall runs the same installer itself; on such a
+server the update fails the same way, the previous version keeps running, and the
+outcome (`installer exit code 1603`) is reported to the log, the About page and
+Telegram/Email — so a stuck server does not go unnoticed.
+
+Whatever the cause, after a failed Setup check that the **LockWall** service is
+running (`services.msc`, or `lockwall.exe status`). If it is not, run Setup again —
+settings, database and blocked IPs are kept.
+
 ### No notifications
 - **Telegram**: Bot Token correct? Chat ID has minus sign for groups?
-- **Email**: SMTP correct? Gmail uses App Password!
+- **Email**: SMTP correct? Gmail uses App Password! `CERTIFICATE_VERIFY_FAILED` means
+  Windows does not trust the mail server's certificate — see [Email](#email)
 - Click **Send Test**
 
 ### "OWA detection not working"

@@ -6,7 +6,7 @@
 
 *Lock down your Windows server like a real fortress.*
 
-[![Version](https://img.shields.io/badge/version-2.6.8-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
+[![Version](https://img.shields.io/badge/version-2.7.2-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B%20%7C%20Server%202016%2B-lightgrey.svg)](https://www.microsoft.com/windows-server)
 [![License](https://img.shields.io/badge/license-Freeware-brightgreen.svg)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/total.svg)](https://github.com/SMSerg2000/LockWall/releases)
@@ -45,6 +45,8 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 - ⚙️ **Per-source Policies** — separate thresholds for RDP, OWA, SQL
 - ✅ **Whitelist** with CIDR support (block subnets, never block trusted networks)
 - 🌍 **GeoIP** — optional country/city/ISP lookup for attacking IPs (multiple providers; off by default)
+- 👁️ **Knows when it can't see** — warns if Windows stops writing the Security log or failed-logon auditing is switched off; one button fixes the log
+- ⏱️ **Boot catch-up** — failed logons from the minutes before the service starts are still counted
 
 ### Web Interface
 - 📊 **Dashboard** — real-time statistics and top attackers

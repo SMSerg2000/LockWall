@@ -7,6 +7,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.2] — 2026-10-09
+
+The first stable release since 2.6.8. It includes 2.6.9, 2.6.10, 2.7.0 and 2.7.1, which were
+tested on the beta channel. Full notes: [release v2.7.2](https://github.com/SMSerg2000/LockWall/releases/tag/v2.7.2).
+
+### Added
+- **LockWall warns when Windows stops writing the Security log.** If the log is full and set to
+  *Do not overwrite events*, Windows silently stops recording failed logons, and LockWall went
+  blind while still showing *Running*. It now checks the log at start and every five minutes:
+  a red banner, a Telegram or email alert, hourly reminders and a message when the log recovers.
+  *Fix the Security log* on the Health page (or `lockwall.exe fix-security-log`) saves a copy and
+  switches the log to *Overwrite events as needed*; `lockwall.exe security-log-status` checks it
+  from the console.
+- **The audit policy is watched while the service runs**, not only at start. If failed-logon
+  auditing is switched off, LockWall turns it back on (`audit.auto_enable`, on by default) and
+  tells you, or raises an alert.
+
+### Fixed
+- **Failed logons in the first minutes after a Windows boot are counted.** The service starts two
+  to three minutes after Windows. On the first start after a boot LockWall now reads the event
+  logs back to the boot, but no further than `time_window_minutes`; a restart within the same
+  boot reads nothing twice.
+- **Health page cards** *Audit Policy*, *Security Log* and *System* show real checks. Since 1.6.0
+  they said *Checking...* forever.
+
+### Security
+- **Email checks the SMTP server certificate.** STARTTLS accepted any certificate; port 465 now
+  uses SMTP over SSL. `notifications.email.insecure_ssl: true` is the explicit opt-out.
+- **A tighter update path.** The updater's working folder is limited to SYSTEM and
+  Administrators; the installer is checked against the signed manifest once more right before it
+  runs; a bad signature or a mismatching installer raises an alert instead of a log line.
+- **OpenSSL 3.5.7** (Python 3.14.7) instead of OpenSSL 3.0, whose support ended on
+  7 September 2026.
+
+### Changed
+- **The log is in English.** All 165 messages that were still in Russian are translated, and the
+  `config.yaml` created at install is in English too, with an `update` section (off).
+- **The installer's error screen says what to do:** restart Windows, run setup again, and check
+  that the LockWall service is running.
+
 ## [2.6.8] — 2026-09-21
 
 ### Added
