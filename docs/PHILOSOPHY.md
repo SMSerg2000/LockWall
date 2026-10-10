@@ -39,10 +39,10 @@ and a **VirusTotal scan** — verify before you run.
 Making the free product better — never locking parts of it away:
 
 - Code signing (no more "Unknown Publisher" warning)
-- REST API for automation / SIEM
 - Webhooks for external systems
 - More notification channels
-- The official **lockwall.app** website
+
+Already done since this list was first written: the REST API with tokens (see *API Tokens* in the User Guide), the official **lockwall.app** website, automatic updates with a signed manifest, and the watch over the Windows Security log.
 
 Got an idea or found a bug? **Open an issue** — requests and reports are welcome.
 
