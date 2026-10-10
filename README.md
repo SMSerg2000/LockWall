@@ -73,7 +73,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 
 ## 🚀 Quick Start
 
-1. **Download** [`LockWall-Setup-x64.msi`](https://github.com/SMSerg2000/LockWall/releases/latest) (~14.4 MB)
+1. **Download** [`LockWall-Setup-x64.msi`](https://github.com/SMSerg2000/LockWall/releases/latest) (~13.7 MB)
 2. **Run the installer** (accept the license) — it installs to `C:\LockWall` and registers + starts the Windows service automatically
 3. **Open the web UI**: http://127.0.0.1:8880/
 4. **Login**: `admin` / `lockwall` (you'll be forced to change the password)

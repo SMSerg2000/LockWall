@@ -70,8 +70,8 @@ Security updates are provided for the latest version:
 
 | Version | Supported |
 |---------|-----------|
-| 2.1.x | ✅ Supported |
-| 2.0.x | ❌ Not supported — upgrade for free |
+| 2.7.x | ✅ Supported |
+| 2.0.x – 2.6.x | ❌ Not supported — upgrade for free: install the latest MSI over any 2.x version |
 | 1.x / pre-public builds | ❌ Not supported |
 
 ---
