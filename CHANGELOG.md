@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.7.4] — 2026-10-11
+
+Contains 2.7.3, which was installed by hand on seven of our own servers and never published, plus
+two fixes from its first evening in the field. Everything here comes from one incident: a server
+where Defender had detected a hacking tool inside SQL Server three days before the server was
+encrypted, and nobody was reading the Defender log. Full notes:
+[release v2.7.4](https://github.com/SMSerg2000/LockWall/releases/tag/v2.7.4).
+
+### Added
+- **Microsoft Defender detections and protection switches go to Telegram and Email.** LockWall
+  reads the Defender event log once a minute and reports what Defender finds (the threat and its
+  severity, where it was found, the process and user it ran under, what Defender did about it, and
+  whether it ran inside SQL Server), real-time protection switched off (a red banner on every page,
+  an hourly reminder and a message when it is back), a setting that weakens Defender, a change
+  reverted by Tamper Protection, an emptied Defender log and the Defender service not running.
+  Four or more detections within a minute come as one digest; after ten alerts in an hour the rest
+  go to the log only. The new `defender` section in `config.yaml` is on by default and harmless
+  next to another antivirus; there is a switch in Settings and `lockwall.exe defender-status`.
+- **A firewall switched off is noticed within ten seconds** instead of on the next five-minute
+  check — the same alarm as before, just in time.
+- **The updater waits two minutes before declaring success** and requires the protection engine
+  to report that it is active. If the service dies or the engine does not come up, the previous
+  version is restored and the alert says what happened.
+- **An unreadable database no longer leaves the service running with nothing inside.** The file
+  is set aside as `data\lockwall.db.unreadable-<date>`, LockWall starts with an empty database,
+  reads the active blocks back from the Windows Firewall rules and sends an alert that says what
+  was lost (history, web users and API tokens; the admin password is back to the default). If the
+  engine still cannot start, an alert goes out on the third failed attempt and when LockWall gives
+  up, at most once an hour.
+- **SQL Server without SQL protection is pointed out** — a line in the log, a banner on every page
+  and one alert when a running SQL Server service is found while SQL protection is off.
+
+### Changed
+- A Defender setting that keeps flipping by itself no longer floods the chat: it is reported twice
+  within two hours, then muted (one message says so) until it has stayed unchanged for a day.
+- A Tamper Protection event that reverted a change which changed nothing (`0 -> 0`) goes to the
+  log instead of Telegram.
+
 ## [2.7.2] — 2026-10-09
 
 The first stable release since 2.6.8. It includes 2.6.9, 2.6.10, 2.7.0 and 2.7.1, which were

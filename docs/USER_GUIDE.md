@@ -240,7 +240,10 @@ LockWall now says so out loud: in the log at service start, in a red banner on
 screen.
 
 Since 2.5.1 it also keeps watching **while it runs**: the state is re-read every
-five minutes. If someone switches the firewall off, an ERROR goes to the log and
+five minutes, and since 2.7.3 a lighter check runs every ten seconds in between, so
+a firewall switched off even for a minute is noticed (on one of our servers it was off
+for 59 seconds and two blocked addresses reached RDP in that minute). If someone
+switches the firewall off, an ERROR goes to the log and
 an alert to Telegram/Email (if configured), with a reminder every hour while it
 stays off and a message when it is back on. The alert points you to the Windows
 Firewall event log (*Applications and Services → Microsoft → Windows → Windows
@@ -321,6 +324,48 @@ Check any server by hand: `lockwall.exe security-log-status` (as administrator),
 `wevtutil gl Security` (look for `retention: false`) and the newest event in
 *Event Viewer → Windows Logs → Security*.
 
+#### Microsoft Defender: what it finds and when it is switched off
+
+Since 2.7.3 LockWall reads the Microsoft Defender event log once a minute and reports,
+through the same Telegram/Email channels and in its own log:
+
+- **a detection** — the threat name and severity, where it was found, the process and
+  user it ran under, and what Defender did (quarantined, removed, blocked, or could not
+  remove). If the threat ran inside SQL Server, the message says so: someone with a
+  SQL Server login started it. Four or more detections within a minute come as one
+  digest; after ten alerts in an hour the rest go to the log only.
+- **real-time protection switched off** — also malware or virus scanning switched off,
+  an engine failure, the Defender service not running, or Defender disabled by policy:
+  an alert, a red banner on every page, a reminder every hour, and a message when
+  protection is back.
+- **a setting that weakens Defender** — cloud-delivered protection, automatic sample
+  submission, PUA blocking or Tamper Protection switched off, a `Disable…` policy set,
+  an exclusion added. Changes in the other direction go to the log only.
+- **a change reverted by Tamper Protection**, and **an emptied Defender event log**.
+
+A setting that keeps flipping by itself (on one of our servers Defender re-initialises
+Tamper Protection every fifteen minutes) is reported twice; the third time LockWall says it
+is muting that setting and writes further flips to the log only, until the setting has
+stayed unchanged for a day (2.7.4).
+
+On a server with another antivirus the Defender service is usually disabled; LockWall
+notes that once at start and stays quiet. LockWall never changes anything in Defender.
+
+Why: on one of our own servers Defender detected a hacking tool inside SQL Server three
+days before the server was encrypted, caught it again twice, and on the day of the attack
+cloud protection, sample submission and real-time protection were switched off within
+three seconds. All of it was in the Defender event log; nobody was reading it.
+
+Switch it off in **Settings → Microsoft Defender** or in `config.yaml`:
+
+```yaml
+defender:
+  enabled: false
+```
+
+Check any server by hand: `lockwall.exe defender-status` (as administrator) — the service
+state, real-time protection, and the detections of the last 24 hours.
+
 ### Updates (About page, Settings → Updates)
 
 LockWall can tell you when a new release is out and install it for you. **Both are
@@ -339,8 +384,12 @@ LockWall waits for a quiet moment — two minutes without new blocks, at most ha
 hour — copies itself aside, and a one-off scheduled task runs the installer
 silently. The service restarts for about a minute; **blocked IPs stay blocked**
 throughout, because the rules live in Windows Firewall. Then LockWall checks that
-the new version is actually running. If it is not, the previous files are put back
-and the service is restarted on the old version. The outcome goes to the log
+the new version is actually running — and, since 2.7.3, that it is **still** running
+two minutes later with its protection engine active: on 4 October 2026 an antivirus
+removed a fresh build 23 seconds after it started, and the old updater had already
+reported success. If the service dies in those two minutes, or the engine does not
+come up, the previous files are put back and the service is restarted on the old
+version. The outcome goes to the log
 (`logs\update.log`), the About page and Telegram/Email.
 
 **Why you can trust what arrives.** Every release manifest is signed with a key
@@ -459,6 +508,17 @@ lockwall.exe stop
 REM ...copy config.yaml / lockwall.db back into place...
 lockwall.exe start
 ```
+
+**If the database cannot be read** (since 2.7.3). A `lockwall.db` that is encrypted,
+truncated or overwritten used to leave the service "Running" with a protection engine
+that failed to start once a minute — nothing blocked, no web console, no alert. Now
+LockWall sets such a file aside as `data\lockwall.db.unreadable-<date>-<time>` (keep it,
+it may be evidence), starts with an empty database and sends an alert. Lost: the
+history of attempts and blocks, web users and API tokens — the admin password is back
+to the default and must be changed at the first login. Kept: active blocks, which live
+in the Windows Firewall rules and are read back from there. If the engine still cannot
+start for any reason, an alert goes out on the third failed attempt and when LockWall
+gives up, at most once an hour.
 
 ### Updating
 
@@ -602,6 +662,24 @@ ssh_protection:
 > not used for SSH — sshd does not report the client IP there.
 
 ⚠️ Changes to these require **service restart**.
+
+> **SQL Server note (2.7.3):** when LockWall finds a running SQL Server service
+> (`MSSQLSERVER` or `MSSQL$<instance>`) while `sql_protection` is off, it says so — a
+> line in the log, a banner on every page and one alert — because a password attack on
+> SQL Server goes unseen without it. On one of our own servers that was the way in.
+
+#### `defender`
+
+```yaml
+defender:
+  enabled: true    # Report Defender detections and protection switches (2.7.3)
+```
+
+What Microsoft Defender finds, and when its protection is switched off, goes to the same
+Telegram/Email channels — see
+[Microsoft Defender](#microsoft-defender-what-it-finds-and-when-it-is-switched-off) under
+the Health page. On by default; harmless on a server with another antivirus. Requires
+**service restart**.
 
 ---
 
@@ -980,7 +1058,8 @@ is shown there, along with a button to turn the firewall on safely. See
 [If Windows Firewall is switched off](#if-windows-firewall-is-switched-off).
 
 Since 2.5.1 LockWall also tells you when this happens: an alert goes to
-Telegram/Email within five minutes of the firewall being switched off.
+Telegram/Email within ten seconds (2.7.3; five minutes before that) of the firewall
+being switched off.
 
 ### The web interface returns "Internal Server Error"
 

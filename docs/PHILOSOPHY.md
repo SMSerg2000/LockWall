@@ -42,7 +42,7 @@ Making the free product better — never locking parts of it away:
 - Webhooks for external systems
 - More notification channels
 
-Already done since this list was first written: the REST API with tokens (see *API Tokens* in the User Guide), the official **lockwall.app** website, automatic updates with a signed manifest, and the watch over the Windows Security log.
+Already done since this list was first written: the REST API with tokens (see *API Tokens* in the User Guide), the official **lockwall.app** website, automatic updates with a signed manifest, the watch over the Windows Security log, and the Microsoft Defender watch (detections and protection switches reported the same way as attacks).
 
 Got an idea or found a bug? **Open an issue** — requests and reports are welcome.
 
