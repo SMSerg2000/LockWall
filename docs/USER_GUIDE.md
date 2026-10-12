@@ -668,6 +668,14 @@ ssh_protection:
 > line in the log, a banner on every page and one alert — because a password attack on
 > SQL Server goes unseen without it. On one of our own servers that was the way in.
 
+> **SQL Server in any language (2.8.0):** SQL Server writes the client address of a
+> failed logon (event 18456) as `[CLIENT: address]`, but translates the word *CLIENT*
+> into the language of the instance. Before 2.8.0 LockWall looked for the English word
+> only, so on a SQL Server installed in another language (Russian, for example) SQL
+> protection counted nothing. 2.8.0 reads the address whatever the word is. If a failed
+> SQL logon ever arrives without an address LockWall can read, it writes a warning to
+> the log at most once an hour instead of skipping it silently.
+
 #### `defender`
 
 ```yaml

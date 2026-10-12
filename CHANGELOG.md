@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.0] — 2026-10-12
+
+A serious fix, released straight to all servers. Full notes:
+[release v2.8.0](https://github.com/SMSerg2000/LockWall/releases/tag/v2.8.0).
+
+### Fixed
+- **SQL protection now works with SQL Server in any language.** SQL Server writes the address
+  of a failed logon (event 18456) as `[CLIENT: address]`, but translates the word *CLIENT* into
+  the language of the instance. LockWall looked for the English word only, so on a SQL Server
+  installed in another language — Russian, in our case — SQL protection read every failed logon
+  and counted none of them: on one of our servers 7,342 password guesses against `sa` in a single
+  day went unblocked. LockWall now reads the address whatever the word in front of it is, checks
+  that it is a real IPv4 or IPv6 address, and still leaves local connections alone.
+
+### Added
+- **A failed SQL logon without an address LockWall can read is reported** as a warning in the
+  log, at most once an hour, instead of being skipped silently.
+
 ## [2.7.4] — 2026-10-11
 
 Contains 2.7.3, which was installed by hand on seven of our own servers and never published, plus
