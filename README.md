@@ -6,7 +6,7 @@
 
 *Lock down your Windows server like a real fortress.*
 
-[![Version](https://img.shields.io/badge/version-2.8.0-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
+[![Version](https://img.shields.io/badge/version-2.8.1-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B%20%7C%20Server%202016%2B-lightgrey.svg)](https://www.microsoft.com/windows-server)
 [![License](https://img.shields.io/badge/license-Freeware-brightgreen.svg)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/total.svg)](https://github.com/SMSerg2000/LockWall/releases)
@@ -41,6 +41,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 ### Detection
 - 🔍 **RDP / OWA / SQL / SSH** brute-force monitoring — four protocols, one service
 - 🎯 **Password Spray Detection** — blocks IPs trying multiple usernames
+- 🐢 **Slow Brute Force Detection** — blocks addresses that keep trying below the regular limit (20 failed logons within 24 hours by default)
 - 📈 **Progressive Blocking** — escalating duration for repeat offenders (1h → 24h → 7d → permanent)
 - ⚙️ **Per-source Policies** — separate thresholds for RDP, OWA, SQL
 - ✅ **Whitelist** with CIDR support (block subnets, never block trusted networks)

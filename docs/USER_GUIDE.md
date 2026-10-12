@@ -50,6 +50,7 @@ LockWall:
 - Blocks attackers **before** they crack the password
 - Reduces server load (attacks don't reach Windows authentication)
 - Protects against **password spray** attacks (multiple usernames from one IP)
+- Catches **slow brute force** too: an address that keeps trying below the regular limit (2.8.1)
 - Escalates block duration for repeat offenders (Progressive Blocking)
 - Notifies administrators via Telegram and Email
 
@@ -585,6 +586,16 @@ spray_detection:
   block_duration_minutes: 0    # 0 = permanent
 ```
 
+#### `slow_bruteforce` (2.8.1, inside `detection`)
+
+```yaml
+detection:
+  slow_bruteforce:
+    enabled: true
+    max_attempts: 20         # failed logons from one address...
+    time_window_hours: 24    # ...within this many hours, all sources together
+```
+
 #### `whitelist`
 
 ```yaml
@@ -820,6 +831,28 @@ spray_detection:
 ```
 
 3 unique usernames from one IP → spray → permanent block.
+
+### Slow brute force (2.8.1)
+
+The regular rule needs 5 failed logons within 10 minutes. An attacker who keeps a slower
+pace never reaches it: on one of our SQL Servers an address tried the `sa` password once
+every 36 minutes, 17 times a day, and every attempt counted as the first. The second rule
+looks at a long window instead:
+
+```yaml
+detection:
+  slow_bruteforce:
+    enabled: true
+    max_attempts: 20
+    time_window_hours: 24
+```
+
+20 failed logons from one address within 24 hours → block. RDP, OWA, SQL and SSH attempts are
+counted together. The block lasts as long as a regular brute-force block (per-source duration
+or Progressive Blocking), the reason reads *Slow brute force*, the Blocked IPs page marks it
+**SLOW** and the Telegram/email alert says *SLOW BRUTE FORCE*. Whitelisted addresses are never
+blocked. The rule is on by default and can be tuned in Settings; it switches itself off if its
+window is not longer than `time_window_minutes`.
 
 ### 3. Progressive Blocking
 

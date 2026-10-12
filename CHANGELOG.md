@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.1] — 2026-10-12
+
+Full notes: [release v2.8.1](https://github.com/SMSerg2000/LockWall/releases/tag/v2.8.1).
+
+### Added
+- **Slow brute force is blocked.** The regular rule blocks an address after 5 failed logons
+  within 10 minutes, so an attacker who keeps a slower pace never reached it: the day 2.8.0 came
+  out, one address tried the `sa` password on one of our SQL Servers once every 36 minutes, 17
+  times a day. LockWall now also blocks an address after 20 failed logons within 24 hours, counting
+  RDP, OWA, SQL and SSH together. The block lasts as long as a regular brute-force block, the reason
+  reads *Slow brute force*, the Blocked IPs page marks it **SLOW** and the alert says *SLOW BRUTE
+  FORCE*. On by default; tune it in Settings or in `detection.slow_bruteforce` in `config.yaml`.
+
 ## [2.8.0] — 2026-10-12
 
 A serious fix, released straight to all servers. Full notes:
