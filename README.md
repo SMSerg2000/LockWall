@@ -6,7 +6,7 @@
 
 *Lock down your Windows server like a real fortress.*
 
-[![Version](https://img.shields.io/badge/version-2.8.1-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
+[![Version](https://img.shields.io/badge/version-2.8.4-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B%20%7C%20Server%202016%2B-lightgrey.svg)](https://www.microsoft.com/windows-server)
 [![License](https://img.shields.io/badge/license-Freeware-brightgreen.svg)](LICENSE)
 [![Downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/total.svg)](https://github.com/SMSerg2000/LockWall/releases)
@@ -49,7 +49,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 - 👁️ **Knows when it can't see** — warns if Windows stops writing the Security log or failed-logon auditing is switched off; one button fixes the log
 - ⏱️ **Boot catch-up** — failed logons from the minutes before the service starts are still counted
 - 🛡️ **Microsoft Defender watch** — Defender detections and protection switches (real-time protection off, a weakened setting, Tamper Protection, an emptied Defender log) go to Telegram / Email; LockWall changes nothing in Defender
-- 🔥 **Firewall state awareness** — a firewall switched off is noticed within ten seconds and reported, with a reminder every hour until it is back
+- 🔥 **Firewall state awareness** — a firewall switched off is noticed within ten seconds and reported, with a reminder every hour until it is back; a firewall that is on but lets inbound connections in by default is reported too, and one button switches it to Block safely (RDP allow rule first, automatic revert unless you confirm)
 
 ### Web Interface
 - 📊 **Dashboard** — real-time statistics and top attackers
@@ -62,7 +62,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 - 👥 **User Management** — multi-admin with RBAC (Admin / Viewer roles)
 
 ### Integration & Automation
-- 🔔 **Notifications** — Telegram + Email on every block, with GeoIP enrichment
+- 🔔 **Notifications** — Telegram (a private chat or a group) + Email on every block, with GeoIP enrichment; every Telegram message starts with an icon for its type and names the server with its public address
 - 📤 **CSV Export** — Blocked IPs, Audit Log, Login Attempts
 - 🔑 **API Tokens** — Bearer / X-API-Key auth for the current JSON endpoints (and the future versioned public API)
 

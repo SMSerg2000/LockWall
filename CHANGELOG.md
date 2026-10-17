@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.8.4] — 2026-10-17
+
+Full notes: [release v2.8.4](https://github.com/SMSerg2000/LockWall/releases/tag/v2.8.4). Versions 2.8.2
+and 2.8.3 were internal builds and were never published; their changes are listed here.
+
+### Added
+- **A firewall that is on but lets everything in is reported, and can be fixed.** Every Windows
+  Firewall profile has a default inbound action. When it is Allow, every inbound connection that no
+  rule explicitly blocks gets in, with the firewall switched on. On one of our servers the Private and
+  Public profiles were set that way: Windows Security showed it in red, LockWall showed green, because
+  it only checked whether the firewall was on. LockWall's own blocks kept working (block rules win),
+  but everything else listening on the server was reachable. LockWall now reads the default inbound
+  action of every profile. When the active profile allows inbound connections by default, it says so
+  in the log, on every dashboard page, on the Health page and in `lockwall.exe firewall-status`, and
+  sends one alert; a switch while it runs is noticed within ten seconds. **Block inbound by default**
+  on the Health page, or `lockwall.exe block-inbound`, shows which listening ports have no allow rule
+  and will close, creates an allow rule for the real RDP port first, arms the 10-minute automatic
+  revert, then switches inbound to Block and leaves outbound as it was. LockWall never does this on
+  its own, and leaves a setting that comes from Group Policy to the GPO.
+- **Alerts you can search by icon.** Every Telegram message starts with an icon for its type:
+  ⛔ an attacker was blocked, 🧱 Windows Firewall, 🦠 Microsoft Defender, 📜 the Security log or logon
+  auditing, 💾 SQL Server without SQL protection, 🔧 LockWall itself, 📦 automatic updates, 🧪 a test
+  message. Each icon belongs to one type only. Service alerts keep a second icon for how serious they
+  are: 🚨 needs action, ⚠️ a warning, ✅ back to normal.
+- **The server's public address in every message.** `Server: TERMINAL (203.0.113.5)` instead of
+  `Server: TERMINAL`, in Telegram, in email and in the email subject. LockWall looks the address up at
+  `api.ipify.org` over HTTPS once an hour, with `checkip.amazonaws.com` as a fallback. This is a new
+  outbound request, made whether or not notifications are on; only the request itself leaves the
+  server. **Settings → General → Public IP**: empty for automatic detection, an address to use as
+  typed, `off` to leave it out and stop the lookup. A message never waits for the lookup.
+
+### Changed
+- A password spray inside a block message is marked 🎯 instead of ⚠️, so searching for warnings no
+  longer finds blocks.
+- The User Guide says that a Telegram group works as well as a private chat (use the group's Chat ID
+  with its minus sign), and its privacy section lists the public address lookup.
+
 ## [2.8.1] — 2026-10-12
 
 Full notes: [release v2.8.1](https://github.com/SMSerg2000/LockWall/releases/tag/v2.8.1).

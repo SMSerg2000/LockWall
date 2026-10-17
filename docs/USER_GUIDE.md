@@ -273,6 +273,39 @@ allow rules, so the RDP allow rule does not weaken protection.
 > ⚠️ LockWall **never** enables the firewall on its own. It changes the
 > reachability of every service on the machine, so it is always your decision.
 
+#### If the firewall is on but lets inbound traffic in
+
+Windows Firewall can be switched on and still let almost everything through: each
+profile (Domain, Private, Public) has a *default inbound action*, and if it is
+**Allow**, every inbound connection that no rule explicitly blocks gets in. LockWall's
+blocks keep working - Windows evaluates block rules first - but every other listening
+port is open to the network: SMB, RPC, SQL Server, a backup agent. Windows Security
+shows this in red. Before 2.8.2 LockWall showed green, because it only checked whether
+the firewall was on; on one of our servers the Private and Public profiles had been set
+to Allow.
+
+Since 2.8.2 LockWall reads the default inbound action of every profile. When the
+**active** profile allows inbound connections by default, you get a line in the log,
+an amber banner on every page, a warning on this page and in
+`lockwall.exe firewall-status`, and one alert to Telegram/Email. A switch from Block to
+Allow while the service runs is noticed within ten seconds; a switch back gets a
+message too. An inactive profile set to Allow is only logged: the server is not exposed
+now, but will be if its network profile changes.
+
+**Switching to Block** (button *Block inbound by default* on this page, or
+`lockwall.exe block-inbound`) follows the same safe path as turning the firewall on:
+
+1. **What will close.** Every listening port is matched against the allow rules of the
+   active profile: green stays reachable, red will stop answering from the network.
+   The match is a best-effort estimate (port, protocol, program, service); when in doubt
+   it shows red. Add allow rules for anything that must stay reachable *before* you switch.
+2. **Your RDP first.** An allow rule for the real RDP port is created before anything changes.
+3. **Safety net.** Inbound returns to Allow automatically within 10 minutes unless you
+   confirm that access still works (*Confirm*, or `lockwall.exe confirm-firewall`).
+
+Outbound stays as it was. If the setting comes from Group Policy, LockWall does not touch
+it and tells you to change it in the GPO.
+
 #### If Windows stops writing the Security log
 
 LockWall sees RDP and OWA attacks in one place only: the Windows **Security**
@@ -370,8 +403,8 @@ state, real-time protection, and the detections of the last 24 hours.
 ### Updates (About page, Settings → Updates)
 
 LockWall can tell you when a new release is out and install it for you. **Both are
-off by default**: the site promises no telemetry and no phone-home, so the first
-outbound request is your decision.
+off by default**: the site promises no telemetry and no phone-home, so whether LockWall
+ever contacts the release page is your decision.
 
 **What checking does.** Every 10 minutes the service fetches two small files from
 the LockWall release page on GitHub — the release manifest and its signature — and
@@ -467,6 +500,7 @@ They are for advanced or manual control. All commands run as Administrator:
 | `lockwall.exe test-notify` | Send a test Telegram/Email notification |
 | `lockwall.exe firewall-status` | Show the Windows Firewall state — are blocks actually enforced? |
 | `lockwall.exe enable-firewall` | Turn Windows Firewall on safely (keeps RDP reachable) |
+| `lockwall.exe block-inbound` | Block inbound connections by default when the firewall is on but lets them in (keeps RDP reachable) |
 | `lockwall.exe confirm-firewall` | Confirm access still works, cancelling the automatic revert |
 | `lockwall.exe security-log-status` | Is Windows writing the Security log? (exit code 0 = yes, 1 = LockWall is blind) |
 | `lockwall.exe fix-security-log [-y]` | Save a copy of the Security log and switch it to "Overwrite events as needed" |
@@ -724,6 +758,32 @@ the Health page. On by default; harmless on a server with another antivirus. Req
 - Bot Token, Chat ID, enable toggle
 - **Send Test** to verify
 
+A group works as well as a private chat: add the bot to the group and use the group's
+Chat ID, with its minus sign (a supergroup's ID starts with `-100`).
+
+#### Finding alerts in Telegram
+
+Every message starts with an icon that tells its type, so a busy chat can be searched by it
+(Telegram search finds emoji). Each icon belongs to one type only:
+
+| Icon | Messages |
+|---|---|
+| ⛔ | An attacker was blocked: RDP, OWA, SQL Server or SSH. Inside, 🎯 marks a password spray, 🐢 a slow brute force, 🔄 a repeat offender |
+| 🧱 | Windows Firewall: switched off, back on, inbound connections allowed by default |
+| 🦠 | Microsoft Defender: a detection, protection switched off or weakened |
+| 📜 | The Security log or logon auditing: LockWall cannot see RDP and OWA attacks |
+| 💾 | SQL Server is running, but SQL protection is off |
+| 🔧 | LockWall itself: the protection engine does not start, the database was unreadable |
+| 📦 | Automatic updates: installed, rolled back, refused |
+| 🧪 | A test message from Settings |
+
+Service alerts carry a second icon for how serious they are: 🚨 needs action now,
+⚠️ a warning, ✅ back to normal.
+
+Every message ends with the server it came from, name and public address together:
+`Server: TERMINAL (203.0.113.5)`. Searching the chat for the address finds everything that
+server has sent. See [Server Label and Public IP](#server-label-and-public-ip).
+
 ### Email
 
 **Settings** → **Notifications** → **Email**:
@@ -746,13 +806,23 @@ notifications:
     insecure_ssl: true
 ```
 
-### Server Label
+### Server Label and Public IP
 
-For multi-server setups:
+Every notification names the server it came from, and since 2.8.4 its public address as
+well: `Server: PROD-EU-1 (203.0.113.5)`, in the email subject too. For multi-server setups:
 ```yaml
 general:
   server_label: "PROD-EU-1"
+  public_ip: ""
 ```
+
+- `server_label` — the name; empty means the hostname.
+- `public_ip` — empty (default): LockWall looks the address up itself (`api.ipify.org` over
+  HTTPS, once an hour, whether or not notifications are on; only the request itself leaves the
+  server, never an attacker's address).
+  Type the address if this server is reached through another one (NAT, a second provider).
+  `off` leaves the address out and stops the lookup. A message never waits for it: until the address is
+  known, the name goes alone.
 
 ---
 
@@ -1276,10 +1346,15 @@ operational security data **locally on the protected server**, including:
 **LockWall does not store passwords.** The Windows Event Log does not expose attempted
 passwords, and LockWall does not record them.
 
-**External communication happens only when you enable a feature that needs it:**
+**External communication.** One request is made by default: since 2.8.4, once an hour LockWall
+asks `api.ipify.org` over HTTPS (fallback `checkip.amazonaws.com`) for the server's own public
+address, to name the server in notifications. The request carries no data; the service sees the
+server's address and LockWall's user agent. `off` in **Settings → General → Public IP** stops it.
+Everything else happens only when you enable a feature that needs it:
 
 - an **online GeoIP provider** (ip-api.com or ipinfo.io) — the attacker IP is sent to that provider;
 - **Telegram** or **Email** notifications;
+- **update checks** — the signed release manifest from GitHub, nothing about your server;
 - any future webhooks / integrations.
 
 If attacker IPs must never leave the server, use GeoIP mode **`Off`** or **`Local` (MaxMind)**.
