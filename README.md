@@ -9,7 +9,7 @@
 [![Version](https://img.shields.io/badge/version-2.8.4-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B%20%7C%20Server%202016%2B-lightgrey.svg)](https://www.microsoft.com/windows-server)
 [![License](https://img.shields.io/badge/license-Freeware-brightgreen.svg)](LICENSE)
-[![Downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/total.svg)](https://github.com/SMSerg2000/LockWall/releases)
+[![Installer downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/LockWall-Setup-x64.msi)](https://github.com/SMSerg2000/LockWall/releases)
 
 **[⬇️ Download](https://github.com/SMSerg2000/LockWall/releases/latest)** · **[🌐 lockwall.app](https://lockwall.app/)** · **[📖 Docs](docs/USER_GUIDE.md)**
 
