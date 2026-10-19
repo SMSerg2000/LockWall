@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.3] — 2026-10-19
+
+Full notes: [release v2.9.3](https://github.com/SMSerg2000/LockWall/releases/tag/v2.9.3). Versions 2.8.5,
+2.9.0, 2.9.1 and 2.9.2 went to our beta servers only and were never published as stable; their changes
+are listed here.
+
+### Added
+- **Alert on a successful logon after failed attempts.** The worst outcome of brute force is a guessed
+  password. LockWall now watches successful network logons as well (Security event 4624 for RDP and
+  OWA, `Accepted` lines from OpenSSH). When an address logs on successfully after 3 or more failed
+  logons within an hour, you get an alert 🔓 with the account, the address, the service and the user
+  names that were tried. Nothing is blocked automatically. Threshold and window: **Settings → Detection**.
+- **Subnet blocking.** When 3 different addresses of one /24 are blocked within an hour, the whole /24
+  is blocked for a day; the alert says *DISTRIBUTED* with 🌐. Public IPv4 only; never a subnet that
+  overlaps the whitelist or holds this server's own public address.
+- **Weekly summary.** Every Monday at 09:00 server time: the week's blocks by service, failed logons,
+  the busiest addresses, and the state of the firewall, the Security log and logon auditing 📊.
+  **Settings → General → Weekly summary** turns it off.
+- **Blocked IPs keeps your place.** After Make permanent, Make temporary or Unblock the page returns to
+  where you were and keeps the sort order. The **Actions** header sorts by block type: temporary
+  blocks first, click again for permanent first.
+
+### Security
+- **Secrets in config.yaml are encrypted.** The Telegram bot token, the SMTP password and the
+  ipinfo.io token are stored encrypted with a key of the server (Windows DPAPI), so a copy of
+  `config.yaml` is useless on any other computer. LockWall encrypts them itself once the service has
+  been running for 10 minutes. Settings no longer shows them: leave a field empty to keep the saved
+  value. An administrator of the server can still recover them; the protection is against copies of
+  the file.
+
+### Changed
+- **The whitelist you see is the whitelist that works.** The protection checked a copy of the whitelist
+  in its database that was only ever added to, so an address removed in Settings stayed unblockable.
+  The database now follows `config.yaml`. On the first start, entries that only the database had are
+  added to `config.yaml` and shown in Settings, so the upgrade never takes protection away.
+- **Settings take effect on Save**: detection thresholds, subnet blocking, the server label and the
+  whitelist no longer wait for a restart. `config.yaml` is written atomically.
+- **The server's public address is looked up only while Telegram or Email is on.** 2.8.4 asked
+  `api.ipify.org` on every server, including servers that send no notifications.
+- **A failed update is not retried in a loop.** A version whose installation stopped the service and
+  failed is retried automatically only after Windows restarts or after 24 hours; **Install now** still
+  tries at once.
+
+### Fixed
+- Under a heavy attack the Security and Application log readers re-read their whole backlog every
+  second; unprocessed events are now kept between cycles.
+- IPv6: blocked IPv6 addresses no longer drift apart from the database, the web forms accept IPv6
+  addresses and subnets, and local IPv6 addresses are never sent to an online GeoIP service.
+- An address unblocked in the database but still in the firewall rule is taken back into the database
+  by the next reconciliation. A block list longer than a netsh command line (about 1,900 addresses) is
+  written through the Windows Firewall COM interface. The local MaxMind database is opened once.
+- Cancelling the *Unblock?* confirmation no longer leaves the button disabled with a spinner.
+
 ## [2.8.4] — 2026-10-17
 
 Full notes: [release v2.8.4](https://github.com/SMSerg2000/LockWall/releases/tag/v2.8.4). Versions 2.8.2

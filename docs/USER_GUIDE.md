@@ -178,6 +178,12 @@ IP block management:
 
 **Manual Block**: "Add Block" form — enter IP or CIDR (e.g., `109.205.213.0/24`), select duration (30 min, 1 hour, 6 hours, 24 hours, 7 days, permanent).
 
+**Sorting**: click **IP Address** to sort by address, **Actions** to sort by block type, the
+one its button shows (∞ for a temporary block, a clock for a permanent one): temporary blocks
+first, click again for permanent first (2.9.3). After Make Permanent, Make Temporary or Unblock
+the page returns to where you were and keeps the sort order, so with temporary blocks first you
+can make them permanent one after another in the same place.
+
 **CIDR Support**: block entire subnets with one rule.
 
 ### Analytics (`/stats`)
@@ -403,8 +409,8 @@ state, real-time protection, and the detections of the last 24 hours.
 ### Updates (About page, Settings → Updates)
 
 LockWall can tell you when a new release is out and install it for you. **Both are
-off by default**: the site promises no telemetry and no phone-home, so whether LockWall
-ever contacts the release page is your decision.
+off by default**: the site promises no telemetry and no phone-home, so the first
+outbound request is your decision.
 
 **What checking does.** Every 10 minutes the service fetches two small files from
 the LockWall release page on GitHub — the release manifest and its signature — and
@@ -425,6 +431,14 @@ reported success. If the service dies in those two minutes, or the engine does n
 come up, the previous files are put back and the service is restarted on the old
 version. The outcome goes to the log
 (`logs\update.log`), the About page and Telegram/Email.
+
+**If an installation fails** (the installer reports an error or hangs for 15 minutes, or the
+new version does not stay up), LockWall puts the service back on the old version and, since
+2.8.5, does not try the same version again by itself until Windows restarts or 24 hours pass.
+On 17 October 2026 Windows Installer hung on one of our servers, and the updater tried again
+every ten minutes: every other attempt left the service stopped for fifteen. The alert and the
+About page say when the next automatic attempt comes; **Install now** on the About page, or
+`lockwall.exe update`, tries at once.
 
 **Why you can trust what arrives.** Every release manifest is signed with a key
 whose public half is built into LockWall. The signature is verified before the
@@ -630,6 +644,27 @@ detection:
     time_window_hours: 24    # ...within this many hours, all sources together
 ```
 
+#### `subnet_blocking` (2.9.0, inside `detection`)
+
+```yaml
+detection:
+  subnet_blocking:
+    enabled: true
+    min_addresses: 3            # different addresses of one /24 blocked...
+    window_minutes: 60          # ...within this many minutes: block the whole /24
+    block_duration_minutes: 1440  # one day; 0 = permanent
+```
+
+#### `success_after_failures` (2.9.0, inside `detection`)
+
+```yaml
+detection:
+  success_after_failures:
+    enabled: true
+    min_failures: 3             # failed logons from the address...
+    window_minutes: 60          # ...within this many minutes before a successful one
+```
+
 #### `whitelist`
 
 ```yaml
@@ -734,6 +769,35 @@ Telegram/Email channels — see
 the Health page. On by default; harmless on a server with another antivirus. Requires
 **service restart**.
 
+### Secrets in config.yaml (2.9.2)
+
+The Telegram bot token, the SMTP password and the ipinfo.io token are stored in
+`config.yaml` encrypted with a key of this computer (Windows DPAPI):
+
+```yaml
+notifications:
+  telegram:
+    bot_token: "dpapi:AQAAANCMnd8BFdERjHoAwE/Cl+s..."
+```
+
+- **Enter them as before**, in Settings or as plain text in `config.yaml`. LockWall
+  encrypts them once the service has been running for 10 minutes, so that an automatic
+  rollback to the previous version still finds them readable. Saving Settings on a
+  server that has been running longer encrypts them at once.
+- **A copy of `config.yaml` is useless on another computer**: in a backup, on a USB
+  stick, in a repository. Copy a config to a new server without its secrets and enter
+  them there. A secret encrypted on another computer reads as empty: the log says so
+  once and Settings asks to enter it again.
+- **Settings never shows them.** The field stays empty with a note that a value is
+  saved; leave it empty to keep the saved value, type a new one to replace it, or tick
+  **Remove the saved …** to delete it. Send Test uses the saved value when the field is
+  empty.
+- **What it does not do:** an administrator of this server can still recover them,
+  because the service has to use them. The protection is against copies of the file;
+  the folder itself is readable only by Administrators and SYSTEM.
+- **Downgrading** to a version older than 2.9.2 after the secrets were encrypted: enter
+  the token and the password again in Settings.
+
 ---
 
 ## Notifications
@@ -768,13 +832,15 @@ Every message starts with an icon that tells its type, so a busy chat can be sea
 
 | Icon | Messages |
 |---|---|
-| ⛔ | An attacker was blocked: RDP, OWA, SQL Server or SSH. Inside, 🎯 marks a password spray, 🐢 a slow brute force, 🔄 a repeat offender |
+| ⛔ | An attacker was blocked: RDP, OWA, SQL Server or SSH. Inside, 🎯 marks a password spray, 🐢 a slow brute force, 🔄 a repeat offender, 🌐 a whole subnet |
+| 🔓 | A successful logon from an address that had just failed several times: the password may have been guessed |
 | 🧱 | Windows Firewall: switched off, back on, inbound connections allowed by default |
 | 🦠 | Microsoft Defender: a detection, protection switched off or weakened |
 | 📜 | The Security log or logon auditing: LockWall cannot see RDP and OWA attacks |
 | 💾 | SQL Server is running, but SQL protection is off |
 | 🔧 | LockWall itself: the protection engine does not start, the database was unreadable |
 | 📦 | Automatic updates: installed, rolled back, refused |
+| 📊 | The weekly summary |
 | 🧪 | A test message from Settings |
 
 Service alerts carry a second icon for how serious they are: 🚨 needs action now,
@@ -783,6 +849,15 @@ Service alerts carry a second icon for how serious they are: 🚨 needs action n
 Every message ends with the server it came from, name and public address together:
 `Server: TERMINAL (203.0.113.5)`. Searching the chat for the address finds everything that
 server has sent. See [Server Label and Public IP](#server-label-and-public-ip).
+
+#### Weekly summary (2.9.0)
+
+Every Monday at 09:00 server time LockWall sends a summary 📊: how many addresses were blocked
+during the week and by which service, how many failed logons it saw, the busiest addresses,
+how many are blocked right now, and whether the firewall, the Security log and logon auditing
+are healthy. On a quiet server it is also the proof that the service is alive and the channel
+works. If the service was down on Monday morning, the summary comes at its first check after.
+Switch it off in **Settings → General → Weekly summary** (`notifications.weekly_digest: false`).
 
 ### Email
 
@@ -817,9 +892,10 @@ general:
 ```
 
 - `server_label` — the name; empty means the hostname.
-- `public_ip` — empty (default): LockWall looks the address up itself (`api.ipify.org` over
-  HTTPS, once an hour, whether or not notifications are on; only the request itself leaves the
-  server, never an attacker's address).
+- `public_ip` — empty (default): while Telegram or Email notifications are on, LockWall looks
+  the address up itself (`api.ipify.org` over HTTPS, once an hour; only the request itself
+  leaves the server, never an attacker's address). With notifications off it asks nothing
+  (2.8.4 asked anyway; fixed in 2.8.5).
   Type the address if this server is reached through another one (NAT, a second provider).
   `off` leaves the address out and stops the lookup. A message never waits for it: until the address is
   known, the name goes alone.
@@ -923,6 +999,50 @@ or Progressive Blocking), the reason reads *Slow brute force*, the Blocked IPs p
 **SLOW** and the Telegram/email alert says *SLOW BRUTE FORCE*. Whitelisted addresses are never
 blocked. The rule is on by default and can be tuned in Settings; it switches itself off if its
 window is not longer than `time_window_minutes`.
+
+### Subnet blocking (2.9.0)
+
+Botnets often rent a whole /24 and try a few passwords from each of its addresses, each one
+staying below the limit or getting blocked on its own. One night one of our servers blocked
+four addresses of the same /24, one by one, within five minutes. When **3 different addresses
+of one /24 are blocked within 60 minutes**, LockWall blocks the whole /24 for a day:
+
+```yaml
+detection:
+  subnet_blocking:
+    enabled: true
+    min_addresses: 3
+    window_minutes: 60
+    block_duration_minutes: 1440
+```
+
+Only public IPv4 is aggregated. Private ranges, CGNAT and IPv6 are never blocked as a subnet,
+and neither is a /24 that overlaps the whitelist or holds this server's own public address.
+The block appears on the Blocked IPs page as `x.y.z.0/24`, and the alert says *DISTRIBUTED*
+with 🌐. A day rather than forever, because mobile operators hand out addresses from shared
+pools and your own people may sit in the same /24; a whitelisted address keeps its subnet safe.
+
+### Successful logon after failed attempts (2.9.0)
+
+The worst outcome of brute force is a guessed password: on the third attempt, before the
+block, or by a slow attacker. LockWall now watches successful network logons too (Security
+event 4624 for RDP and OWA, `Accepted …` from OpenSSH) and raises an alert 🔓 when an address
+logs on successfully after **3 or more failed logons within the last 60 minutes**:
+
+```yaml
+detection:
+  success_after_failures:
+    enabled: true
+    min_failures: 3
+    window_minutes: 60
+```
+
+The alert names the account, the address, the service and the user names that were tried, and
+says what to do: sign the session out, change the password, block the address. Nothing is
+blocked automatically, because it may be your own user who mistyped the password twice. Each
+logon is reported once (an RDP logon with NLA writes two 4624 records). Whitelisted addresses
+are not reported. SQL Server writes successful logons only when its login auditing is set to
+*Both failed and successful logins*, so SQL is not covered.
 
 ### 3. Progressive Blocking
 
@@ -1121,6 +1241,13 @@ whitelist:
 
 ⚠️ Without whitelist, you can lock yourself out!
 
+Since 2.9.0 the list in Settings is the list that works: saving it takes effect at once, and an
+address you remove is no longer protected. Before 2.9.0 a removed address stayed whitelisted
+until the database was edited by hand. On the first start of 2.9.1, entries that only the
+database had are added to `config.yaml` and shown in Settings, with a warning in the log, so the
+upgrade itself never takes protection away; remove them in Settings if they are not needed.
+IPv6 addresses and subnets are accepted too (`2001:db8::/32`).
+
 ---
 
 ## Logs and Diagnostics
@@ -1285,7 +1412,7 @@ the permissions on `C:\LockWall` should look like, and are not surprised by them
 | Folder | Who has access | Why |
 |--------|----------------|-----|
 | `C:\LockWall` | SYSTEM and administrators can write; everyone else can only read | Otherwise any user of the machine could replace `lockwall.exe` or one of its libraries, and the service — which runs as SYSTEM — would execute their code at the next start |
-| `config\`, `data\` | SYSTEM and administrators only | They hold the Telegram bot token, the SMTP password, the key used to sign web sessions, and the password and API-token hashes |
+| `config\`, `data\` | SYSTEM and administrators only | They hold the Telegram bot token and the SMTP password (encrypted for this computer since 2.9.2, see [Secrets in config.yaml](#secrets-in-configyaml-292)), the key used to sign web sessions, and the password and API-token hashes |
 | `logs\` | readable by everyone | Deliberate: diagnostics should not require administrator rights, and there are no secrets in the logs |
 
 Permissions that an administrator granted to specific accounts are left alone —
@@ -1346,14 +1473,14 @@ operational security data **locally on the protected server**, including:
 **LockWall does not store passwords.** The Windows Event Log does not expose attempted
 passwords, and LockWall does not record them.
 
-**External communication.** One request is made by default: since 2.8.4, once an hour LockWall
-asks `api.ipify.org` over HTTPS (fallback `checkip.amazonaws.com`) for the server's own public
-address, to name the server in notifications. The request carries no data; the service sees the
-server's address and LockWall's user agent. `off` in **Settings → General → Public IP** stops it.
-Everything else happens only when you enable a feature that needs it:
+**External communication happens only when you enable a feature that needs it:**
 
 - an **online GeoIP provider** (ip-api.com or ipinfo.io) — the attacker IP is sent to that provider;
-- **Telegram** or **Email** notifications;
+- **Telegram** or **Email** notifications. While either is on, LockWall also asks `api.ipify.org`
+  over HTTPS (fallback `checkip.amazonaws.com`) once an hour for the server's own public address,
+  to name the server in notifications. The request carries no data; the service sees the server's
+  address and LockWall's user agent. `off` in **Settings → General → Public IP** stops it. Version
+  2.8.4 made this request even with notifications off; 2.8.5 fixed that;
 - **update checks** — the signed release manifest from GitHub, nothing about your server;
 - any future webhooks / integrations.
 

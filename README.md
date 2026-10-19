@@ -6,7 +6,7 @@
 
 *Lock down your Windows server like a real fortress.*
 
-[![Version](https://img.shields.io/badge/version-2.8.4-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
+[![Version](https://img.shields.io/badge/version-2.9.3-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B%20%7C%20Server%202016%2B-lightgrey.svg)](https://www.microsoft.com/windows-server)
 [![License](https://img.shields.io/badge/license-Freeware-brightgreen.svg)](LICENSE)
 [![Installer downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/LockWall-Setup-x64.msi)](https://github.com/SMSerg2000/LockWall/releases)
@@ -42,6 +42,8 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 - 🔍 **RDP / OWA / SQL / SSH** brute-force monitoring — four protocols, one service
 - 🎯 **Password Spray Detection** — blocks IPs trying multiple usernames
 - 🐢 **Slow Brute Force Detection** — blocks addresses that keep trying below the regular limit (20 failed logons within 24 hours by default)
+- 🌐 **Subnet Blocking** — when 3 addresses of one /24 are blocked within an hour, the whole /24 is blocked for a day (public IPv4 only, never over the whitelist)
+- 🔓 **Guessed-password alert** — a successful logon after 3 or more failed attempts within an hour is reported with the account, the address and the user names tried
 - 📈 **Progressive Blocking** — escalating duration for repeat offenders (1h → 24h → 7d → permanent)
 - ⚙️ **Per-source Policies** — separate thresholds for RDP, OWA, SQL
 - ✅ **Whitelist** with CIDR support (block subnets, never block trusted networks)
@@ -53,7 +55,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 
 ### Web Interface
 - 📊 **Dashboard** — real-time statistics and top attackers
-- 🚫 **Blocked IPs** — manage blocks (manual block/unblock, change duration)
+- 🚫 **Blocked IPs** — manage blocks (manual block/unblock, change duration, sort by address or block type)
 - 📈 **Analytics** — graphs of hourly attempts, daily activity, top countries
 - 📋 **Logs viewer** — live updates, filters, search
 - ⚙️ **Settings** — edit config via the UI, no YAML editing required
@@ -62,7 +64,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 - 👥 **User Management** — multi-admin with RBAC (Admin / Viewer roles)
 
 ### Integration & Automation
-- 🔔 **Notifications** — Telegram (a private chat or a group) + Email on every block, with GeoIP enrichment; every Telegram message starts with an icon for its type and names the server with its public address
+- 🔔 **Notifications** — Telegram (a private chat or a group) + Email on every block, with GeoIP enrichment; every Telegram message starts with an icon for its type and names the server with its public address; a weekly summary every Monday
 - 📤 **CSV Export** — Blocked IPs, Audit Log, Login Attempts
 - 🔑 **API Tokens** — Bearer / X-API-Key auth for the current JSON endpoints (and the future versioned public API)
 
@@ -71,6 +73,7 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 - 🔥 **Smart Firewall Rules** — grouped by duration category (not one rule per IP)
 - ☁️ **Self-hosted** — no cloud backend, no external agents; your data stays on your server
 - 🔒 **Authentication** — login, RBAC, session timeout, forced password change
+- 🗝️ **Encrypted secrets** — the Telegram token and the SMTP password in `config.yaml` are encrypted for the server (Windows DPAPI) and never shown in Settings
 
 ---
 
