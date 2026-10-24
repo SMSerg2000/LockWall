@@ -6,7 +6,7 @@
 
 *Lock down your Windows server like a real fortress.*
 
-[![Version](https://img.shields.io/badge/version-2.9.3-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
+[![Version](https://img.shields.io/badge/version-2.9.6-blue.svg)](https://github.com/SMSerg2000/LockWall/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%2B%20%7C%20Server%202016%2B-lightgrey.svg)](https://www.microsoft.com/windows-server)
 [![License](https://img.shields.io/badge/license-Freeware-brightgreen.svg)](LICENSE)
 [![Installer downloads](https://img.shields.io/github/downloads/SMSerg2000/LockWall/LockWall-Setup-x64.msi)](https://github.com/SMSerg2000/LockWall/releases)
@@ -42,16 +42,16 @@ RDP brute-force is one of the most common attacks on internet-facing Windows ser
 - 🔍 **RDP / OWA / SQL / SSH** brute-force monitoring — four protocols, one service
 - 🎯 **Password Spray Detection** — blocks IPs trying multiple usernames
 - 🐢 **Slow Brute Force Detection** — blocks addresses that keep trying below the regular limit (20 failed logons within 24 hours by default)
-- 🌐 **Subnet Blocking** — when 3 addresses of one /24 are blocked within an hour, the whole /24 is blocked for a day (public IPv4 only, never over the whitelist)
+- 🌐 **Subnet Blocking** — when 3 addresses of one /24 are blocked within an hour, the whole /24 is blocked for a day, and longer each time it comes back when Progressive Blocking is on (public IPv4 only, never over the whitelist)
 - 🔓 **Guessed-password alert** — a successful logon after 3 or more failed attempts within an hour is reported with the account, the address and the user names tried
 - 📈 **Progressive Blocking** — escalating duration for repeat offenders (1h → 24h → 7d → permanent)
 - ⚙️ **Per-source Policies** — separate thresholds for RDP, OWA, SQL
 - ✅ **Whitelist** with CIDR support (block subnets, never block trusted networks)
 - 🌍 **GeoIP** — optional country/city/ISP lookup for attacking IPs (multiple providers; off by default)
-- 👁️ **Knows when it can't see** — warns if Windows stops writing the Security log or failed-logon auditing is switched off; one button fixes the log
+- 👁️ **Knows when it can't see** — warns if Windows stops writing the Security log or failed-logon auditing is switched off; one button fixes the log; it also tells you when successful logons are not audited, which the guessed-password alert needs
 - ⏱️ **Boot catch-up** — failed logons from the minutes before the service starts are still counted
 - 🛡️ **Microsoft Defender watch** — Defender detections and protection switches (real-time protection off, a weakened setting, Tamper Protection, an emptied Defender log) go to Telegram / Email; LockWall changes nothing in Defender
-- 🔥 **Firewall state awareness** — a firewall switched off is noticed within ten seconds and reported, with a reminder every hour until it is back; a firewall that is on but lets inbound connections in by default is reported too, and one button switches it to Block safely (RDP allow rule first, automatic revert unless you confirm)
+- 🔥 **Firewall state awareness** — a firewall switched off is noticed within ten seconds and reported, with a reminder every hour until it is back; a firewall that is on but lets inbound connections in by default is reported too, and one button switches it to Block safely (RDP allow rule first, automatic revert unless you confirm); a network profile the server is not using right now (say, Domain on a server outside a domain) is watched too
 
 ### Web Interface
 - 📊 **Dashboard** — real-time statistics and top attackers
@@ -210,7 +210,7 @@ Have an idea or hit a bug? **[Open an issue](https://github.com/SMSerg2000/LockW
 - **RAM**: 256 MB (512 recommended)
 - **Disk**: 100 MB (500 MB for logs)
 - **Privileges**: Administrator (for Windows Firewall + audit policy)
-- **Audit Policy**: Logon Failure auditing (LockWall enables it automatically)
+- **Audit Policy**: Logon Failure auditing (LockWall enables it automatically); Logon Success auditing for the guessed-password alert (one button on the Health page)
 
 ---
 

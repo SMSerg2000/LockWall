@@ -246,6 +246,14 @@ LockWall now says so out loud: in the log at service start, in a red banner on
 **every page** of the web interface, on this page, and on the installer's final
 screen.
 
+A quieter case is a profile the server is not using right now: say, Domain on a
+server that is not in a domain, or Public while the network is Private. Blocks work,
+but would stop if the network type changes (the server joins a domain, gets a new
+network card, or Windows identifies the network differently after a restart). Since
+2.9.6 this gets an amber banner on every page and the same *Enable Windows Firewall*
+button on this page. Turning on a profile that is not in use changes nothing for
+current connections.
+
 Since 2.5.1 it also keeps watching **while it runs**: the state is re-read every
 five minutes, and since 2.7.3 a lighter check runs every ten seconds in between, so
 a firewall switched off even for a minute is noticed (on one of our servers it was off
@@ -295,8 +303,9 @@ Since 2.8.2 LockWall reads the default inbound action of every profile. When the
 an amber banner on every page, a warning on this page and in
 `lockwall.exe firewall-status`, and one alert to Telegram/Email. A switch from Block to
 Allow while the service runs is noticed within ten seconds; a switch back gets a
-message too. An inactive profile set to Allow is only logged: the server is not exposed
-now, but will be if its network profile changes.
+message too. A profile the server is not using right now that is set to Allow does not
+expose anything yet, but would if the network type changes: since 2.9.6 it gets an amber
+banner and the same *Block inbound by default* button (before, only a line in the log).
 
 **Switching to Block** (button *Block inbound by default* on this page, or
 `lockwall.exe block-inbound`) follows the same safe path as turning the firewall on:
@@ -359,6 +368,18 @@ a fix, a policy is setting it — look there.
 > ⚠️ LockWall **never** changes the log mode on its own: some organisations keep
 > "Do not overwrite" on purpose, for audit requirements. It tells you, and fixes it
 > when you ask.
+
+**When only failed logons are audited.** Windows audits successful logons too by default,
+so a live server writes dozens of events an hour and a day of silence means a problem.
+On one of our servers the audit policy had lost everything but failed logons: the log was
+fine, but a day without RDP attacks left it empty, and LockWall reported it as silent.
+Worse, the alert about a successful logon after failed attempts cannot work there: it
+reads event 4624, which Windows did not write. Since 2.9.6 LockWall checks this too. With
+successful logons not audited, a quiet log is not an alarm; instead an amber banner and
+the *Audit successful logons* button on this page (or `lockwall.exe
+enable-success-audit`) turn it on. Failed-logon auditing stays as it is, and LockWall
+does not change this setting on its own: on a busy server event 4624 makes the log turn
+over faster.
 
 Check any server by hand: `lockwall.exe security-log-status` (as administrator), or
 `wevtutil gl Security` (look for `retention: false`) and the newest event in
@@ -517,6 +538,7 @@ They are for advanced or manual control. All commands run as Administrator:
 | `lockwall.exe block-inbound` | Block inbound connections by default when the firewall is on but lets them in (keeps RDP reachable) |
 | `lockwall.exe confirm-firewall` | Confirm access still works, cancelling the automatic revert |
 | `lockwall.exe security-log-status` | Is Windows writing the Security log? (exit code 0 = yes, 1 = LockWall is blind) |
+| `lockwall.exe enable-success-audit` | Audit successful logons too (event 4624, for the guessed-password alert) |
 | `lockwall.exe fix-security-log [-y]` | Save a copy of the Security log and switch it to "Overwrite events as needed" |
 | `lockwall.exe check-update` | Check whether a newer release is available (installs nothing) |
 | `lockwall.exe update [-y]` | Download, verify and install the latest release now |
@@ -1021,6 +1043,12 @@ and neither is a /24 that overlaps the whitelist or holds this server's own publ
 The block appears on the Blocked IPs page as `x.y.z.0/24`, and the alert says *DISTRIBUTED*
 with 🌐. A day rather than forever, because mobile operators hand out addresses from shared
 pools and your own people may sit in the same /24; a whitelisted address keeps its subnet safe.
+
+A subnet that comes back is blocked longer each time, the way single addresses are (since 2.9.6,
+with Progressive Blocking on): the next longer step of the Progressive Blocking ladder. With the
+default ladder of an hour, a day, a week and permanently, a subnet gets a day, then a week, then
+a permanent block; the alert shows the strike with 🔄. The buttons on the Blocked IPs page work for
+a subnet as for an address (before 2.9.6 they led to *Not Found*).
 
 ### Successful logon after failed attempts (2.9.0)
 

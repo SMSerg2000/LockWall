@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.9.6] — 2026-10-24
+
+Full notes: [release v2.9.6](https://github.com/SMSerg2000/LockWall/releases/tag/v2.9.6). Versions 2.9.4 and
+2.9.5 went to our beta servers only and were never published as stable; their changes are listed here.
+
+### Added
+- **Firewall profiles the server is not using right now.** Windows applies one of three firewall profiles
+  depending on the network: Domain only on a computer in a domain that sees a domain controller, Private or
+  Public otherwise. A profile that was off but not in use, for example Domain on a server outside a domain,
+  got only a line in the log; blocks work in that state, but stop if the network type changes. Now it gets
+  an amber banner on every page and the **Enable Windows Firewall** button on the Health page; turning on a
+  profile that is not in use changes nothing for current connections. The same for a profile not in use
+  that lets inbound connections in by default: an amber banner and the **Block inbound by default** button.
+- **A subnet that comes back is blocked longer each time**, the way single addresses are. With Progressive
+  Blocking on, a returning subnet gets the next longer step of the ladder: with the default ladder, a day,
+  then a week, then a permanent block. The alert shows the strike with 🔄.
+- **Successful-logon auditing.** On one of our servers the audit policy recorded only failed logons: a day
+  without RDP attacks left the Security log empty, LockWall reported it as silent, and the alert about a
+  successful logon after failed attempts could not work (it reads event 4624). LockWall now checks this
+  too: when successful logons are not audited, a quiet log is not an alarm, and an amber banner with the
+  **Audit successful logons** button on the Health page (or `lockwall.exe enable-success-audit`) turns it
+  on. LockWall does not change this setting on its own.
+
+### Fixed
+- **Blocked IPs:** the buttons of a subnet block (Make permanent, Make temporary, Unblock) led to a
+  *Not Found* page; the slash of `203.0.113.0/24` broke the page path. They now work for a subnet as for an
+  address.
+- The Health page no longer shows the firewall check in green when the firewall state cannot be read.
+- When the profile in use lets inbound connections in by default and another profile is off, the Health
+  check names the open profile first.
+
+---
+
 ## [2.9.3] — 2026-10-19
 
 Full notes: [release v2.9.3](https://github.com/SMSerg2000/LockWall/releases/tag/v2.9.3). Versions 2.8.5,
